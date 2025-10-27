@@ -5,7 +5,8 @@ export const load = async ({ locals, url }) => {
 
   if (isProtected && !locals.user) {
     // Redirect to login if not authenticated
-    throw redirect(303, `/login?redirectTo=${url.pathname}`);
+    // throw redirect(303, `/login?redirectTo=${url.pathname}`);
+    throw redirect(303, `/`);
   }
 
   return {

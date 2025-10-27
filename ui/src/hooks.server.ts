@@ -18,7 +18,9 @@ const handleAuth: Handle = async ({ event, resolve }) => {
       });
 
       if (res.ok) {
-        event.locals.user = await res.json(); // get user data from GO api
+        const user = await res.json();
+        event.locals.user = user?.user; // get user data from GO api. The reason it's user.user is because of the way the response is structured in Go
+        // console.log('Full user: ', event.locals.user);
       } else {
         // invalid/expired token
         event.locals.token = null;
