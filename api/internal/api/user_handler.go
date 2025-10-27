@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"regexp"
 
+	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/middleware"
 	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/store"
 	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/utils"
 )
@@ -135,4 +136,98 @@ func (h *UserHandler) HandleRegisterUser(w http.ResponseWriter, r *http.Request)
 	// Respond with the created user (excluding password hash) as JSON to the frontend:
 	utils.WriteJSON(w, http.StatusCreated, utils.Envelope{"user": createdUser}) // 201
 
+}
+
+// Additional user-related handlers can be added here (e.g., GetUser, UpdateUser, DeleteUser, etc.)
+func (h *UserHandler) HandleGetUserByID(w http.ResponseWriter, r *http.Request) {
+	// Implementation for getting a user by ID
+	userId, err := utils.ReadIDParam(r, "id")
+	if err != nil {
+		h.logger.Printf("Invalid user ID parameter: %v", err)
+		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "Invalid user ID parameter"}) // 400
+		return
+	}
+	
+	user, err := h.userStore.GetUserById(int(userId))
+	if err != nil {
+		h.logger.Printf("Error fetching user: %v", err)
+		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "Failed to fetch user"})
+		return
+	}
+	if user == nil {
+		utils.WriteJSON(w, http.StatusNotFound, utils.Envelope{"error": "User not found"})
+		return
+	}
+	
+	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"user": user}) // 200
+}
+
+func (h *UserHandler) HandleUpdateUser(w http.ResponseWriter, r *http.Request) {
+	// Implementation for updating a user by ID
+	userId, err := utils.ReadIDParam(r, "id")
+	if err != nil {
+		h.logger.Printf("Invalid user ID parameter: %v", err)
+		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "Invalid user ID parameter"}) // 400
+		return
+	}
+	
+	var req RegisterUserRequest
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		h.logger.Printf("Invalid request payload: %v", err)
+		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "Invalid request payload"})
+		return
+	}
+
+	// Ensure current user is the one being updated
+	currentUser := middleware.GetUser(r)
+	if currentUser.IsAnonymous() || currentUser.ID != int(userId) {
+		h.logger.Printf("Unauthorized update attempt for user ID %d by user ID %d", userId, currentUser.ID)
+		utils.WriteJSON(w, http.StatusUnauthorized, utils.Envelope{"error": "Unauthorized"}) // 401
+		return
+	}
+
+	// // Validate the request
+	// err = h.validateRegisterUserRequest(&req)
+	// if err != nil {
+	// 	h.logger.Printf("Validation error: %v", err)
+	// 	utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": err.Error()}) // 400
+	// 	return
+	// }
+	
+	user := &store.User{
+		ID:       int(userId),
+		Username: req.Username,
+		Email:    req.Email,
+		AddressLine1: req.AddressLine1,
+		AddressLine2: req.AddressLine2,
+		AddressCity:  req.AddressCity,
+		AddressState: req.AddressState,
+		AddressZip:   req.AddressZip,
+		AddressCountry: req.AddressCountry,
+		PfpURL:   req.PfpURL,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Bio:      req.Bio,
+		AuthLevel: req.AuthLevel,
+	}
+	
+	if req.Bio != "" {
+		user.Bio = req.Bio
+	}
+	err = user.PasswordHash.Set(req.Password)
+	if err != nil {
+		h.logger.Printf("Error setting password hash: %v", err)
+		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "Internal server error"}) // 500
+		return
+	}
+	
+	updatedUser, err := h.userStore.UpdateUser(user)
+	if err != nil {
+		h.logger.Printf("Error updating user: %v", err)
+		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "Failed to update user"})
+		return
+	}
+	
+	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"user": updatedUser}) // 200
 }

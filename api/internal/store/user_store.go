@@ -92,7 +92,7 @@ type UserStore interface {
 	CreateUser(*User) (*User, error)
 	GetUserById(id int) (*User, error)
 	GetUserByUsername(username string) (*User, error)
-	UpdateUser(*User) error
+	UpdateUser(*User) (*User, error)
 	GetUserToken(scope, tokenPlaintext string) (*User, error)
 }
 
@@ -176,6 +176,16 @@ func (s *PostgresUserStore) GetUserById(id int) (*User, error) {
 		&user.Email,
 		&user.PasswordHash.hash,
 		&user.Bio,
+		&user.AuthLevel,
+		&user.FirstName,
+		&user.LastName,
+		&user.PfpURL,
+		&user.AddressLine1,
+		&user.AddressLine2,
+		&user.AddressCity,
+		&user.AddressState,
+		&user.AddressZip,
+		&user.AddressCountry,
 		&user.CreatedAt,
 		&user.UpdatedAt)
 	if err == sql.ErrNoRows {
@@ -241,7 +251,7 @@ func (s *PostgresUserStore) GetUserByUsername(username string) (*User, error) {
 }
 
 // Update user:
-func (s *PostgresUserStore) UpdateUser(user *User) error {
+func (s *PostgresUserStore) UpdateUser(user *User) (*User, error) {
 	query := `
 		UPDATE users
 		SET username = $1, 
@@ -277,20 +287,20 @@ func (s *PostgresUserStore) UpdateUser(user *User) error {
 		user.AddressCountry, 
 		user.ID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// rows:
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Check if any row was actually updated
 	if rowsAffected == 0 {
-		return sql.ErrNoRows
+		return nil, sql.ErrNoRows
 	}
 
-	return nil
+	return user, nil
 }
 
 // Get user by token (for authentication):

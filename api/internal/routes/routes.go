@@ -22,7 +22,12 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 		r.Get("/user-notes/{user_id}", app.Middleware.RequireUser(app.NoteHandler.HandleListNotesByUserID))
 		r.Post("/notes", app.Middleware.RequireUser(app.NoteHandler.HandleCreateNote))
 		r.Patch("/notes/{id}", app.Middleware.RequireUser(app.NoteHandler.HandleUpdateNote))
-		r.Delete("/notes/{id}", app.Middleware.RequireUser(app.NoteHandler.HandleDeleteNote))
+		r.Delete("/notes/{id}", app.Middleware.RequireUser(app.NoteHandler.HandleDeleteNote)) 
+
+		// Users routes
+		r.Get("/users/{id}", app.Middleware.RequireUser(app.UserHandler.HandleGetUserByID))
+		r.Patch("/users/{id}", app.Middleware.RequireUser(app.UserHandler.HandleUpdateUser))
+		// r.Delete("/users/{id}", app.Middleware.RequireUser(app.UserHandler.HandleDeleteUser))
 	})
 
 	// Define routes and their handlers here
