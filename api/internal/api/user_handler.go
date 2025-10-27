@@ -17,6 +17,16 @@ type RegisterUserRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	Bio      string `json:"bio"`
+	AddressLine1 string `json:"address_line_1"`
+	AddressLine2 string `json:"address_line_2"`
+	AddressCity  string `json:"address_city"`
+	AddressState string `json:"address_state"`
+	AddressZip   string `json:"address_zip"`
+	AddressCountry string `json:"address_country"`
+	PfpURL    string `json:"pfp_url"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	AuthLevel int 	`json:"auth_level"` // Optional, default to regular user
 }
 
 type UserHandler struct {
@@ -91,6 +101,17 @@ func (h *UserHandler) HandleRegisterUser(w http.ResponseWriter, r *http.Request)
 	user := &store.User{
 		Username: req.Username,
 		Email:    req.Email,
+		AddressLine1: req.AddressLine1,
+		AddressLine2: req.AddressLine2,
+		AddressCity:  req.AddressCity,
+		AddressState: req.AddressState,
+		AddressZip:   req.AddressZip,
+		AddressCountry: req.AddressCountry,
+		PfpURL:   req.PfpURL,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Bio:      req.Bio,
+		AuthLevel: req.AuthLevel, // Default to 1 (regular user) if not provided
 	}
 
 	if req.Bio != "" {

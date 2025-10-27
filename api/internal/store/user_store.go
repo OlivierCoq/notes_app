@@ -60,8 +60,8 @@ type User struct {
 	FirstName		string    `json:"first_name"`
 	LastName		string    `json:"last_name"`
 	PfpURL			string    `json:"pfp_url"`
-	AddressLine1 string    `json:"address_line_1"`
-	AddressLine2 string    `json:"address_line_2"`
+	AddressLine1 string    `json:"address_line1"`
+	AddressLine2 string    `json:"address_line2"`
 	AddressCity  string    `json:"city"`
 	AddressState string    `json:"state"`
 	AddressZip   string    `json:"zip"`
@@ -111,11 +111,11 @@ func (s *PostgresUserStore) CreateUser(user *User) (*User, error) {
 		first_name, 
 		last_name, 
 		pfp_url, 
-		address_line_1, 
-		address_line_2, 
+		address_line1, 
+		address_line2, 
 		address_city, 
 		address_state, 
-		address_zip, 
+		address_zip_code, 
 		address_country, 
 		created_at, 
 		updated_at)
@@ -156,11 +156,11 @@ func (s *PostgresUserStore) GetUserById(id int) (*User, error) {
 		first_name, 
 		last_name, 
 		pfp_url, 
-		address_line_1, 
-		address_line_2, 
+		address_line1, 
+		address_line2, 
 		address_city, 
 		address_state, 
-		address_zip, 
+		address_zip_code, 
 		address_country, 
 		created_at, 
 		updated_at
@@ -186,6 +186,7 @@ func (s *PostgresUserStore) GetUserById(id int) (*User, error) {
 	return user, nil
 }
 
+// Read (Get) user by Username:
 func (s *PostgresUserStore) GetUserByUsername(username string) (*User, error) {
 	query := `
 		SELECT id,
@@ -197,11 +198,11 @@ func (s *PostgresUserStore) GetUserByUsername(username string) (*User, error) {
 		first_name,
 		last_name,
 		pfp_url,
-		address_line_1,
-		address_line_2,
+		address_line1,
+		address_line2,
 		address_city,
 		address_state,
-		address_zip,
+		address_zip_code,
 		address_country,
 		created_at,
 		updated_at
@@ -239,7 +240,6 @@ func (s *PostgresUserStore) GetUserByUsername(username string) (*User, error) {
 	return user, nil
 }
 
-
 // Update user:
 func (s *PostgresUserStore) UpdateUser(user *User) error {
 	query := `
@@ -251,11 +251,11 @@ func (s *PostgresUserStore) UpdateUser(user *User) error {
 		first_name = $5, 
 		last_name = $6, 
 		pfp_url = $7, 
-		address_line_1 = $8, 
-		address_line_2 = $9, 
+		address_line1 = $8, 
+		address_line2 = $9, 
 		address_city = $10, 
 		address_state = $11, 
-		address_zip = $12, 
+		address_zip_code = $12, 
 		address_country = $13, 
 		updated_at = NOW()
 		WHERE id = $14
@@ -293,6 +293,7 @@ func (s *PostgresUserStore) UpdateUser(user *User) error {
 	return nil
 }
 
+// Get user by token (for authentication):
 func (s *PostgresUserStore) GetUserToken(scope, plaintextPassword string) (*User, error) {
 	// Implementation for retrieving a user by token from PostgreSQL
 
@@ -310,11 +311,11 @@ func (s *PostgresUserStore) GetUserToken(scope, plaintextPassword string) (*User
 		u.first_name, 
 		u.last_name, 
 		u.pfp_url, 
-		u.address_line_1, 
-		u.address_line_2, 
+		u.address_line1, 
+		u.address_line2, 
 		u.address_city, 
 		u.address_state, 
-		u.address_zip, 
+		u.address_zip_code, 
 		u.address_country, 
 		u.created_at, 
 		u.updated_at
