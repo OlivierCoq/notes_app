@@ -1,7 +1,13 @@
 <script lang="ts">
+	// Components
 	import Modal from '$lib/components/ui/Modal.svelte';
 
-	let showModal = $state(false);
+	// Data and State
+	let dashboard_state = $state({});
+
+	// Stores
+
+	// Methods
 </script>
 
 <div class="flex min-h-[95vh] w-full flex-col">
