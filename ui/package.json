@@ -29,5 +29,8 @@
 		"typescript": "^5.9.2",
 		"vite": "^7.1.7",
 		"vite-plugin-devtools-json": "^1.0.0"
+	},
+	"dependencies": {
+		"dotenv": "^17.2.3"
 	}
 }

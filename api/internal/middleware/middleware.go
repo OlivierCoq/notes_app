@@ -7,6 +7,7 @@ import (
 
 	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/store"
 	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/utils"
+	"github.com/rs/cors"
 )
 
 type UserMiddleware struct {
@@ -53,10 +54,43 @@ func GetUser(r *http.Request) *store.User {
 	return user
 }
 
+// CORS middleware function to handle Cross-Origin Resource Sharing
+func (um *UserMiddleware) CORS(next http.Handler) http.Handler {
+	cors := cors.New(cors.Options{
+		AllowOriginFunc: func(origin string) bool {
+			// Allow all origins for development
+			return true
+		},
+		AllowedMethods: []string{
+			"GET",
+			"POST",
+			"PUT",
+			"DELETE",
+			"OPTIONS",
+			"PATCH",
+		},
+		AllowedHeaders: []string{
+			"Authorization",
+			"Content-Type",
+			"Accept",
+			"Origin",
+			"X-Requested-With",
+			"Access-Control-Request-Method",
+			"Access-Control-Request-Headers",
+		},
+		ExposedHeaders: []string{
+			"Authorization",
+			"Content-Type",
+		},
+		AllowCredentials: true, // Allow credentials with custom origin function
+		Debug:            true, // Enable debug mode to see CORS logs
+	})
+	return cors.Handler(next)
+}
+
 // Middleware function to authenticate user based on Bearer token in Authorization header:
 func (um *UserMiddleware) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		// Always add the Vary header when dealing with authentication:
 		// The Vary header indicates to caching proxies that the response may vary based on the value of the Authorization header.
 		w.Header().Add("Vary", "Authorization") // Caching proxies should consider the Authorization header when deciding whether to serve a cached response.

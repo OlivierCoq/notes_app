@@ -5,9 +5,11 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-
 func SetupRoutes(app *app.Application) *chi.Mux {
 	r := chi.NewRouter()
+
+	// Apply CORS middleware to all routes
+	r.Use(app.Middleware.CORS)
 
 	// Grouping routes and applying middleware can be done here if needed
 	// the purpose of this r.Group method is to create a sub-router with specific middleware applied to it.
@@ -22,7 +24,7 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 		r.Get("/user-notes/{user_id}", app.Middleware.RequireUser(app.NoteHandler.HandleListNotesByUserID))
 		r.Post("/notes", app.Middleware.RequireUser(app.NoteHandler.HandleCreateNote))
 		r.Patch("/notes/{id}", app.Middleware.RequireUser(app.NoteHandler.HandleUpdateNote))
-		r.Delete("/notes/{id}", app.Middleware.RequireUser(app.NoteHandler.HandleDeleteNote)) 
+		r.Delete("/notes/{id}", app.Middleware.RequireUser(app.NoteHandler.HandleDeleteNote))
 
 		// Users routes
 		r.Get("/users/{id}", app.Middleware.RequireUser(app.UserHandler.HandleGetUserByID))
