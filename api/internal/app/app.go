@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/api"
+	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/middleware"
 	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/store"
 	"github.com/OlivierCoq/notes_app/api/notes_app_api/migrations"
 )
@@ -14,6 +16,9 @@ import (
 type Application struct {
 	Logger *log.Logger
 	DB             *sql.DB // Add the database connection field
+	UserHandler  *api.UserHandler
+	Middleware     *middleware.UserMiddleware
+	NoteHandler	 *api.NoteHandler
 }
 
 func NewApplication() (*Application, error) {
@@ -29,11 +34,18 @@ func NewApplication() (*Application, error) {
 
 
 	// Stores
+	notesStore := store.NewPostgresNoteStore(pgDB)
+	userStore := store.NewPostgresUserStore(pgDB)
 
 	// Handlers
+	noteHandler := api.NewNoteHandler(notesStore, logger)
+	userHandler := api.NewUserHandler(userStore, logger)
 
-	// Midleware
-
+	// Middleware
+	middlewareHandler := &middleware.UserMiddleware{
+		UserStore: userStore,
+	}
+	userMiddleware := middlewareHandler
 
 	// Run database migrations using the embedded filesystem:
 	// the "." means the current directory, which is where the migration files are located in the embedded FS
@@ -46,8 +58,11 @@ func NewApplication() (*Application, error) {
 
 
 	app := &Application{
-		Logger: logger,
-		DB:     pgDB,
+		Logger:      logger,
+		DB:          pgDB,
+		UserHandler: userHandler,
+		Middleware:    userMiddleware,
+		NoteHandler: noteHandler,
 	}
 
 	return app, nil
