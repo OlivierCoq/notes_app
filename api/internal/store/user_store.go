@@ -91,6 +91,7 @@ func NewPostgresUserStore(db *sql.DB) *PostgresUserStore {
 type UserStore interface {
 	CreateUser(*User) (*User, error)
 	GetUserById(id int) (*User, error)
+	GetUserByUsername(username string) (*User, error)
 	UpdateUser(*User) error
 	GetUserToken(scope, tokenPlaintext string) (*User, error)
 }
@@ -184,6 +185,60 @@ func (s *PostgresUserStore) GetUserById(id int) (*User, error) {
 	}
 	return user, nil
 }
+
+func (s *PostgresUserStore) GetUserByUsername(username string) (*User, error) {
+	query := `
+		SELECT id,
+		username,
+		email,
+		password_hash,
+		bio,
+		auth_level,
+		first_name,
+		last_name,
+		pfp_url,
+		address_line_1,
+		address_line_2,
+		address_city,
+		address_state,
+		address_zip,
+		address_country,
+		created_at,
+		updated_at
+		FROM users
+		WHERE username = $1
+	`
+	user := &User{
+		PasswordHash: password{},
+	}
+	err := s.db.QueryRow(query, username).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.PasswordHash.hash,
+		&user.Bio,
+		&user.AuthLevel,
+		&user.FirstName,
+		&user.LastName,
+		&user.PfpURL,
+		&user.AddressLine1,
+		&user.AddressLine2,
+		&user.AddressCity,
+		&user.AddressState,
+		&user.AddressZip,
+		&user.AddressCountry,
+		&user.CreatedAt,
+		&user.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil // No user found
+	}
+	if err != nil {
+		return nil, err
+	}
+	
+	return user, nil
+}
+
 
 // Update user:
 func (s *PostgresUserStore) UpdateUser(user *User) error {

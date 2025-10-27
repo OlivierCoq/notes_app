@@ -201,3 +201,31 @@ func (nh *NoteHandler) HandleDeleteNote(w http.ResponseWriter, r *http.Request) 
 
 	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"message": "Note deleted successfully"}) // 200
 }
+
+func (nh *NoteHandler) HandleListNotesByUserID(w http.ResponseWriter, r *http.Request) {
+
+	// Implementation for listing notes by user ID
+	userId, err := utils.ReadIDParam(r, "user_id")
+	if err != nil {
+		nh.logger.Printf("Invalid user ID parameter: %v", err)
+		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "Invalid user ID parameter"}) // 400
+		return
+	}
+	
+	// Ensure current user is the same as the requested user ID
+	currentUser := middleware.GetUser(r)
+	if currentUser.IsAnonymous() || currentUser.ID != int(userId) {
+		nh.logger.Printf("Unauthorized access to notes of user ID %d by user ID %d", userId, currentUser.ID)
+		utils.WriteJSON(w, http.StatusUnauthorized, utils.Envelope{"error": "Unauthorized"}) // 401
+		return
+	}
+
+	notes, err := nh.notesStore.ListNotesByUserID(int(userId))
+	if err != nil {
+		nh.logger.Printf("Error retrieving notes: %v", err)
+		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "Failed to retrieve notes"})
+		return
+	}
+	
+	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"notes": notes}) // 200
+}

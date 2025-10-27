@@ -31,6 +31,7 @@ type NoteStore interface {
 	UpdateNote(*Note) error
 	DeleteNote(id int) error
 	GetNoteOwner(id int) (int, error)
+	ListNotesByUserID(userID int) ([]*Note, error)
 }
 
 // CRUD operations:
@@ -152,4 +153,40 @@ func (pg *PostgresNoteStore) GetNoteOwner(id int) (int, error) {
 		return 0, err
 	}
 	return userID, nil	
+}
+
+func (pg *PostgresNoteStore) ListNotesByUserID(userID int) ([]*Note, error) {
+	query := `
+		SELECT id, title, content, user_id, is_favorite, created_at, updated_at
+		FROM notes
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+	`
+	rows, err := pg.db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
+	var notes []*Note
+	for rows.Next() {
+		note := &Note{}
+		err := rows.Scan(
+			&note.ID,
+			&note.Title,
+			&note.Content,
+			&note.UserID,
+			&note.IsFavorite,
+			&note.CreatedAt,
+			&note.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		notes = append(notes, note)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return notes, nil
 }
