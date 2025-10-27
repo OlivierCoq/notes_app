@@ -14,20 +14,20 @@ import (
 
 // This is for user registration requests
 type RegisterUserRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Bio      string `json:"bio"`
-	AddressLine1 string `json:"address_line_1"`
-	AddressLine2 string `json:"address_line_2"`
-	AddressCity  string `json:"address_city"`
-	AddressState string `json:"address_state"`
-	AddressZip   string `json:"address_zip"`
+	Username       string `json:"username"`
+	Email          string `json:"email"`
+	Password       string `json:"password"`
+	Bio            string `json:"bio"`
+	AddressLine1   string `json:"address_line_1"`
+	AddressLine2   string `json:"address_line_2"`
+	AddressCity    string `json:"address_city"`
+	AddressState   string `json:"address_state"`
+	AddressZip     string `json:"address_zip"`
 	AddressCountry string `json:"address_country"`
-	PfpURL    string `json:"pfp_url"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	AuthLevel int 	`json:"auth_level"` // Optional, default to regular user
+	PfpURL         string `json:"pfp_url"`
+	FirstName      string `json:"first_name"`
+	LastName       string `json:"last_name"`
+	AuthLevel      int    `json:"auth_level"` // Optional, default to regular user
 }
 
 type UserHandler struct {
@@ -100,19 +100,19 @@ func (h *UserHandler) HandleRegisterUser(w http.ResponseWriter, r *http.Request)
 
 	// Send to DB via userStore
 	user := &store.User{
-		Username: req.Username,
-		Email:    req.Email,
-		AddressLine1: req.AddressLine1,
-		AddressLine2: req.AddressLine2,
-		AddressCity:  req.AddressCity,
-		AddressState: req.AddressState,
-		AddressZip:   req.AddressZip,
+		Username:       req.Username,
+		Email:          req.Email,
+		AddressLine1:   req.AddressLine1,
+		AddressLine2:   req.AddressLine2,
+		AddressCity:    req.AddressCity,
+		AddressState:   req.AddressState,
+		AddressZip:     req.AddressZip,
 		AddressCountry: req.AddressCountry,
-		PfpURL:   req.PfpURL,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Bio:      req.Bio,
-		AuthLevel: req.AuthLevel, // Default to 1 (regular user) if not provided
+		PfpURL:         req.PfpURL,
+		FirstName:      req.FirstName,
+		LastName:       req.LastName,
+		Bio:            req.Bio,
+		AuthLevel:      req.AuthLevel, // Default to 1 (regular user) if not provided
 	}
 
 	if req.Bio != "" {
@@ -147,7 +147,7 @@ func (h *UserHandler) HandleGetUserByID(w http.ResponseWriter, r *http.Request) 
 		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "Invalid user ID parameter"}) // 400
 		return
 	}
-	
+
 	user, err := h.userStore.GetUserById(int(userId))
 	if err != nil {
 		h.logger.Printf("Error fetching user: %v", err)
@@ -158,7 +158,7 @@ func (h *UserHandler) HandleGetUserByID(w http.ResponseWriter, r *http.Request) 
 		utils.WriteJSON(w, http.StatusNotFound, utils.Envelope{"error": "User not found"})
 		return
 	}
-	
+
 	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"user": user}) // 200
 }
 
@@ -170,7 +170,7 @@ func (h *UserHandler) HandleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "Invalid user ID parameter"}) // 400
 		return
 	}
-	
+
 	var req RegisterUserRequest
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -194,24 +194,24 @@ func (h *UserHandler) HandleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	// 	utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": err.Error()}) // 400
 	// 	return
 	// }
-	
+
 	user := &store.User{
-		ID:       int(userId),
-		Username: req.Username,
-		Email:    req.Email,
-		AddressLine1: req.AddressLine1,
-		AddressLine2: req.AddressLine2,
-		AddressCity:  req.AddressCity,
-		AddressState: req.AddressState,
-		AddressZip:   req.AddressZip,
+		ID:             int(userId),
+		Username:       req.Username,
+		Email:          req.Email,
+		AddressLine1:   req.AddressLine1,
+		AddressLine2:   req.AddressLine2,
+		AddressCity:    req.AddressCity,
+		AddressState:   req.AddressState,
+		AddressZip:     req.AddressZip,
 		AddressCountry: req.AddressCountry,
-		PfpURL:   req.PfpURL,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Bio:      req.Bio,
-		AuthLevel: req.AuthLevel,
+		PfpURL:         req.PfpURL,
+		FirstName:      req.FirstName,
+		LastName:       req.LastName,
+		Bio:            req.Bio,
+		AuthLevel:      req.AuthLevel,
 	}
-	
+
 	if req.Bio != "" {
 		user.Bio = req.Bio
 	}
@@ -221,13 +221,36 @@ func (h *UserHandler) HandleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "Internal server error"}) // 500
 		return
 	}
-	
+
 	updatedUser, err := h.userStore.UpdateUser(user)
 	if err != nil {
 		h.logger.Printf("Error updating user: %v", err)
 		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "Failed to update user"})
 		return
 	}
-	
+
 	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"user": updatedUser}) // 200
+}
+
+func (h *UserHandler) HandleGetSelf(w http.ResponseWriter, r *http.Request) {
+	// Implementation for getting the currently authenticated user
+	currentUser := middleware.GetUser(r)
+	if currentUser.IsAnonymous() {
+		h.logger.Printf("Unauthorized access to self user data")
+		utils.WriteJSON(w, http.StatusUnauthorized, utils.Envelope{"error": "Unauthorized"}) // 401
+		return
+	}
+
+	user, err := h.userStore.GetUserById(currentUser.ID)
+	if err != nil {
+		h.logger.Printf("Error fetching user: %v", err)
+		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "Failed to fetch user"})
+		return
+	}
+	if user == nil {
+		utils.WriteJSON(w, http.StatusNotFound, utils.Envelope{"error": "User not found"})
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"user": user}) // 200
 }

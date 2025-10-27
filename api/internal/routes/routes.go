@@ -29,6 +29,7 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 		// Users routes
 		r.Get("/users/{id}", app.Middleware.RequireUser(app.UserHandler.HandleGetUserByID))
 		r.Patch("/users/{id}", app.Middleware.RequireUser(app.UserHandler.HandleUpdateUser))
+		r.Get("/users/me", app.Middleware.RequireUser(app.UserHandler.HandleGetSelf))
 		// r.Delete("/users/{id}", app.Middleware.RequireUser(app.UserHandler.HandleDeleteUser))
 	})
 

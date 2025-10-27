@@ -58,8 +58,12 @@ func GetUser(r *http.Request) *store.User {
 func (um *UserMiddleware) CORS(next http.Handler) http.Handler {
 	cors := cors.New(cors.Options{
 		AllowOriginFunc: func(origin string) bool {
-			// Allow all origins for development
-			return true
+			// Custom origins can be added here:
+			allowedOrigins := []string{
+				"http://localhost:5173",          // SvelteKit dev server
+				"http://your-production-url.com", // Production URL
+			}
+			return utils.StringInSlice(origin, allowedOrigins)
 		},
 		AllowedMethods: []string{
 			"GET",
