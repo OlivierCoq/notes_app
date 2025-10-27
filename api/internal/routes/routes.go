@@ -32,10 +32,10 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 	r.Post("/users/register", app.UserHandler.HandleRegisterUser)
 
 	// // Token creation route
-	// r.Post("/tokens/authentication", app.TokenHandler.HandleCreateToken)
+	r.Post("/tokens/authentication", app.TokenHandler.HandleCreateToken)
 
 	// // Logging user out:
-	// r.Delete("/tokens/authentication", app.Middleware.RequireUser(app.TokenHandler.HandleRevokeToken))
+	r.Delete("/tokens/authentication", app.Middleware.RequireUser(app.TokenHandler.HandleRevokeToken))
 
 	return r
 }

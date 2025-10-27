@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/app"
+	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/routes"
 )
 
 // To learn more, visit: https://github.com/OlivierCoq/go_api_template
@@ -36,10 +37,10 @@ defer app.DB.Close()
 // Routes and Handlers setup
 
 		// Using chi for routing
-	// r := routes.SetupRoutes(app)
+	r := routes.SetupRoutes(app)
 
 	// Use the chi router as the main handler for incoming requests
-	// http.Handle("/", r)
+	http.Handle("/", r)
 
 
 	// declare a new server with specific configurations
