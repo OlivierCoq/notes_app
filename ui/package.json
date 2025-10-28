@@ -34,7 +34,9 @@
 		"vite-plugin-devtools-json": "^1.0.0"
 	},
 	"dependencies": {
+		"@tadashi/svelte-editor-quill": "4",
 		"dotenv": "^17.2.3",
+		"i": "^0.3.7",
 		"jwt-decode": "^4.0.0"
 	}
 }

@@ -102,6 +102,10 @@ func (h *TokenHandler) HandleRevokeToken(w http.ResponseWriter, r *http.Request)
 	w.Header().Del("Authorization")
 	// Middleware will set the user to anonymous user.
 	r = middleware.SetUser(r, store.AnonymousUser)
+	// if r.Context() != nil {
+	// 	r = r.WithContext(middleware.SetUser(r, store.AnonymousUser))
+	// }
+	
 
 	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"message": "Token revoked successfully"})
 }

@@ -23,7 +23,7 @@
 	<!-- <link rel="icon" href={favicon} /> -->
 </svelte:head>
 
-<main class="align-center min-h-[100vh] w-full bg-slate-800">
+<main class="align-center min-h-[100vh] w-full bg-slate-700">
 	{#if $userStore}
 		<Navbar />
 	{/if}

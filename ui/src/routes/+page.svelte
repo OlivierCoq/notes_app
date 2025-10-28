@@ -13,7 +13,7 @@
 	});
 </script>
 
-<div class="flex h-full w-full flex-col justify-center">
+<div class="flex h-[100vh] w-full flex-col justify-center">
 	<div
 		class="align-center mx-auto flex w-96 flex-col justify-center rounded-md bg-slate-100 p-8 shadow-md dark:bg-slate-700"
 	>
