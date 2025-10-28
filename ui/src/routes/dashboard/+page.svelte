@@ -141,7 +141,7 @@
   
 	<div class="flex w-full flex-1">
     <!-- Notes List -->
-    <div class="flex w-1/4 flex-col border-r border-slate-600 p-4">
+    <div class="flex w-1/4 h-[90vh] flex-col border-r border-slate-600 p-4 overflow-scroll">
       <h2 class="mb-4 text-xl font-bold text-slate-200">Your Notes</h2>
       <!-- If dashboard_state.all_notes.length > 0 -->
        {#if dashboard_state.all_notes.length > 0}
