@@ -36,6 +36,9 @@ func (p *password) Set(plainText string) error {
 
 // For verifying if the provided plaintext password matches the stored hash. Authentication and login purposes.
 func (p *password) Matches(plainText string) (bool, error) {
+	if p == nil || p.hash == nil {
+		return false, errors.New("password hash is nil")
+	}
 	err := bcrypt.CompareHashAndPassword(p.hash, []byte(plainText))
 	if err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
@@ -51,24 +54,24 @@ func (p *password) Matches(plainText string) (bool, error) {
 }
 
 type User struct {
-	ID           int       `json:"id"`
-	Username     string    `json:"username"`
-	Email        string    `json:"email"`
-	PasswordHash password  `json:"-"`
-	Bio          string    `json:"bio"`
-	AuthLevel    int       `json:"auth_level"`
-	FirstName		string    `json:"first_name"`
-	LastName		string    `json:"last_name"`
-	PfpURL			string    `json:"pfp_url"`
-	AddressLine1 string    `json:"address_line1"`
-	AddressLine2 string    `json:"address_line2"`
-	AddressCity  string    `json:"city"`
-	AddressState string    `json:"state"`
-	AddressZip   string    `json:"zip"`
-	AddressCountry string    `json:"country"`
+	ID             int      `json:"id"`
+	Username       string   `json:"username"`
+	Email          string   `json:"email"`
+	PasswordHash   password `json:"-"`
+	Bio            string   `json:"bio"`
+	AuthLevel      int      `json:"auth_level"`
+	FirstName      string   `json:"first_name"`
+	LastName       string   `json:"last_name"`
+	PfpURL         string   `json:"pfp_url"`
+	AddressLine1   string   `json:"address_line1"`
+	AddressLine2   string   `json:"address_line2"`
+	AddressCity    string   `json:"city"`
+	AddressState   string   `json:"state"`
+	AddressZip     string   `json:"zip"`
+	AddressCountry string   `json:"country"`
 
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // AnonymousUser is a placeholder for unauthenticated users.
@@ -122,10 +125,10 @@ func (s *PostgresUserStore) CreateUser(user *User) (*User, error) {
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 		RETURNING id, created_at, updated_at
 	`
-	err := s.db.QueryRow(query, 
-		user.Username, 
-		user.Email, 
-		user.PasswordHash.hash, 
+	err := s.db.QueryRow(query,
+		user.Username,
+		user.Email,
+		user.PasswordHash.hash,
 		user.Bio,
 		user.AuthLevel,
 		user.FirstName,
@@ -246,7 +249,7 @@ func (s *PostgresUserStore) GetUserByUsername(username string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return user, nil
 }
 
@@ -271,20 +274,20 @@ func (s *PostgresUserStore) UpdateUser(user *User) (*User, error) {
 		WHERE id = $14
 	`
 	result, err := s.db.Exec(
-		query, 
-		user.Username, 
-		user.Email, 
-		user.Bio, 
-		user.AuthLevel, 
-		user.FirstName, 
-		user.LastName, 
-		user.PfpURL, 
-		user.AddressLine1, 
-		user.AddressLine2, 
-		user.AddressCity, 
-		user.AddressState, 
-		user.AddressZip, 
-		user.AddressCountry, 
+		query,
+		user.Username,
+		user.Email,
+		user.Bio,
+		user.AuthLevel,
+		user.FirstName,
+		user.LastName,
+		user.PfpURL,
+		user.AddressLine1,
+		user.AddressLine2,
+		user.AddressCity,
+		user.AddressState,
+		user.AddressZip,
+		user.AddressCountry,
 		user.ID)
 	if err != nil {
 		return nil, err

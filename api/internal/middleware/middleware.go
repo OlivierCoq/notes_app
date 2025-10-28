@@ -49,7 +49,9 @@ func GetUser(r *http.Request) *store.User {
 	// So now, we can retrieve the user from the context:
 	user, ok := r.Context().Value(userContextKey).(*store.User)
 	if !ok {
-		panic("missing user in request") // bad actor call. This could be a hacker trying to access a protected route without authentication.
+		// Return anonymous user instead of panicking
+		// This allows routes without authentication middleware to work
+		return store.AnonymousUser
 	}
 	return user
 }
@@ -57,13 +59,10 @@ func GetUser(r *http.Request) *store.User {
 // CORS middleware function to handle Cross-Origin Resource Sharing
 func (um *UserMiddleware) CORS(next http.Handler) http.Handler {
 	cors := cors.New(cors.Options{
-		AllowOriginFunc: func(origin string) bool {
-			// Custom origins can be added here:
-			allowedOrigins := []string{
-				"http://localhost:5173",          // SvelteKit dev server
-				"http://your-production-url.com", // Production URL
-			}
-			return utils.StringInSlice(origin, allowedOrigins)
+		AllowedOrigins: []string{
+			"http://localhost:5173",
+			"http://127.0.0.1:5173",
+			"http://localhost:3000",
 		},
 		AllowedMethods: []string{
 			"GET",
@@ -79,15 +78,12 @@ func (um *UserMiddleware) CORS(next http.Handler) http.Handler {
 			"Accept",
 			"Origin",
 			"X-Requested-With",
-			"Access-Control-Request-Method",
-			"Access-Control-Request-Headers",
 		},
 		ExposedHeaders: []string{
 			"Authorization",
-			"Content-Type",
 		},
-		AllowCredentials: true, // Allow credentials with custom origin function
-		Debug:            true, // Enable debug mode to see CORS logs
+		AllowCredentials: true,
+		Debug:            false,
 	})
 	return cors.Handler(next)
 }
@@ -95,6 +91,12 @@ func (um *UserMiddleware) CORS(next http.Handler) http.Handler {
 // Middleware function to authenticate user based on Bearer token in Authorization header:
 func (um *UserMiddleware) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check for nil middleware
+		if um == nil || um.UserStore == nil {
+			http.Error(w, "Internal server error: middleware not properly initialized", http.StatusInternalServerError)
+			return
+		}
+
 		// Always add the Vary header when dealing with authentication:
 		// The Vary header indicates to caching proxies that the response may vary based on the value of the Authorization header.
 		w.Header().Add("Vary", "Authorization") // Caching proxies should consider the Authorization header when deciding whether to serve a cached response.

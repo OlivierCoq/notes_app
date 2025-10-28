@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/middleware"
 	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/store"
 	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/tokens"
 	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/utils"
@@ -37,6 +36,21 @@ func NewTokenHandler(tokenStore store.TokenStore, userStore store.UserStore, log
 
 func (h *TokenHandler) HandleCreateToken(w http.ResponseWriter, r *http.Request) {
 	// Implementation for creating a new token
+
+	// Add nil checks to prevent panic
+	if h == nil {
+		http.Error(w, "Internal server error: handler not initialized", http.StatusInternalServerError)
+		return
+	}
+	if h.userStore == nil {
+		http.Error(w, "Internal server error: user store not initialized", http.StatusInternalServerError)
+		return
+	}
+	if h.tokenStore == nil {
+		http.Error(w, "Internal server error: token store not initialized", http.StatusInternalServerError)
+		return
+	}
+
 	var req createTokenRequest
 
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -50,6 +64,12 @@ func (h *TokenHandler) HandleCreateToken(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		h.logger.Printf("Error fetching user: %v", err)
 		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "Internal Server Error"})
+		return
+	}
+
+	if user == nil {
+		h.logger.Printf("User not found: %s", req.Username)
+		utils.WriteJSON(w, http.StatusUnauthorized, utils.Envelope{"error": "Invalid credentials"})
 		return
 	}
 
@@ -98,14 +118,6 @@ func (h *TokenHandler) HandleRevokeToken(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// remove Authorization header from response and future http context:
-	w.Header().Del("Authorization")
-	// Middleware will set the user to anonymous user.
-	r = middleware.SetUser(r, store.AnonymousUser)
-	// if r.Context() != nil {
-	// 	r = r.WithContext(middleware.SetUser(r, store.AnonymousUser))
-	// }
-	
-
+	// Token has been revoked successfully
 	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"message": "Token revoked successfully"})
 }
