@@ -15,18 +15,19 @@ import (
 
 // This is the main application struct that holds the dependencies for the app
 type Application struct {
-	Logger 			 *log.Logger
-	DB           *sql.DB // Add the database connection field
-	UserHandler  *api.UserHandler
-	TokenHandler *api.TokenHandler
-	Middleware   *middleware.UserMiddleware
-	NoteHandler  *api.NoteHandler
+	Logger        *log.Logger
+	DB            *sql.DB // Add the database connection field
+	UserHandler   *api.UserHandler
+	TokenHandler  *api.TokenHandler
+	Middleware    *middleware.UserMiddleware
+	NoteHandler   *api.NoteHandler
+	FolderHandler *api.FolderHandler
 }
 
 func NewApplication() (*Application, error) {
 
 	// Create a new logger:
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime) 
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	// Database connection
 	pgDB, err := store.Open()
@@ -34,16 +35,17 @@ func NewApplication() (*Application, error) {
 		return nil, fmt.Errorf("failed to connect to the database: %w", err)
 	}
 
-
 	// Stores
 	notesStore := store.NewPostgresNoteStore(pgDB)
 	userStore := store.NewPostgresUserStore(pgDB)
 	tokenStore := store.NewPostgresTokenStore(pgDB)
+	folderStore := store.NewPostgresFolderStore(pgDB)
 
 	// Handlers
 	noteHandler := api.NewNoteHandler(notesStore, logger)
 	userHandler := api.NewUserHandler(userStore, logger)
 	tokenHandler := api.NewTokenHandler(tokenStore, userStore, logger)
+	folderHandler := api.NewFolderHandler(folderStore, logger)
 
 	// Middleware
 	middlewareHandler := &middleware.UserMiddleware{
@@ -55,19 +57,18 @@ func NewApplication() (*Application, error) {
 	// the "." means the current directory, which is where the migration files are located in the embedded FS
 	err = store.MigrateFS(pgDB, migrations.FS, ".")
 	if err != nil {
-		// panic and crash the app if migration fails:	
+		// panic and crash the app if migration fails:
 		panic(err)
 	}
 
-
-
 	app := &Application{
-		Logger:       logger,
-		DB:           pgDB,
-		UserHandler:  userHandler,
-		TokenHandler: tokenHandler,
-		Middleware:   userMiddleware,
-		NoteHandler:  noteHandler,
+		Logger:        logger,
+		DB:            pgDB,
+		UserHandler:   userHandler,
+		TokenHandler:  tokenHandler,
+		Middleware:    userMiddleware,
+		NoteHandler:   noteHandler,
+		FolderHandler: folderHandler,
 	}
 
 	return app, nil

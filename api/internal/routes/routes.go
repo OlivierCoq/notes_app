@@ -26,6 +26,13 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 		r.Patch("/notes/{id}", app.Middleware.RequireUser(app.NoteHandler.HandleUpdateNote))
 		r.Delete("/notes/{id}", app.Middleware.RequireUser(app.NoteHandler.HandleDeleteNote))
 
+		// Folder routes
+		r.Get("/folders/{id}", app.Middleware.RequireUser(app.FolderHandler.HandleGetFolderByID))
+		r.Get("/user-folders/{user_id}", app.Middleware.RequireUser(app.FolderHandler.HandleListFoldersByUserID))
+		r.Post("/folders", app.Middleware.RequireUser(app.FolderHandler.HandleCreateFolder))
+		r.Patch("/folders/{id}", app.Middleware.RequireUser(app.FolderHandler.HandleUpdateFolder))
+		r.Delete("/folders/{id}", app.Middleware.RequireUser(app.FolderHandler.HandleDeleteFolder))
+
 		// Users routes
 		r.Get("/users/{id}", app.Middleware.RequireUser(app.UserHandler.HandleGetUserByID))
 		r.Patch("/users/{id}", app.Middleware.RequireUser(app.UserHandler.HandleUpdateUser))

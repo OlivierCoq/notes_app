@@ -10,13 +10,11 @@ import (
 	"github.com/OlivierCoq/notes_app/api/notes_app_api/internal/utils"
 )
 
-
 type NoteHandler struct {
 	// Dependencies for the NoteHandler can be added here, such as a NoteStore or Logger
 	notesStore store.NoteStore
 	logger     *log.Logger
 }
-
 
 // Constructor for NoteHandler
 func NewNoteHandler(notesStore store.NoteStore, logger *log.Logger) *NoteHandler {
@@ -25,7 +23,6 @@ func NewNoteHandler(notesStore store.NoteStore, logger *log.Logger) *NoteHandler
 		logger:     logger,
 	}
 }
-
 
 // NoteHandler methods for handling HTTP requests related to notes can be added here.
 // CRUD
@@ -71,7 +68,7 @@ func (nh *NoteHandler) HandleGetNoteByID(w http.ResponseWriter, r *http.Request)
 		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "Invalid note ID parameter"}) // 400
 		return
 	}
-	
+
 	note, err := nh.notesStore.GetNoteByID(int(noteId))
 	if err != nil {
 		nh.logger.Printf("Error retrieving note: %v", err)
@@ -128,7 +125,8 @@ func (nh *NoteHandler) HandleUpdateNote(w http.ResponseWriter, r *http.Request) 
 	var updatedNoteRequest struct {
 		Title      *string `json:"title"`
 		Content    *string `json:"content"`
-		IsFavorite *bool    `json:"is_favorite"`
+		IsFavorite *bool   `json:"is_favorite"`
+		Filepath   *string `json:"filepath"`
 	}
 
 	err = json.NewDecoder(r.Body).Decode(&updatedNoteRequest)
@@ -168,7 +166,7 @@ func (nh *NoteHandler) HandleDeleteNote(w http.ResponseWriter, r *http.Request) 
 		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "Invalid note ID parameter"}) // 400
 		return
 	}
-	
+
 	// Fetch existing note
 	_, err = nh.notesStore.GetNoteByID(int(noteId))
 	if err != nil {
@@ -211,7 +209,7 @@ func (nh *NoteHandler) HandleListNotesByUserID(w http.ResponseWriter, r *http.Re
 		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "Invalid user ID parameter"}) // 400
 		return
 	}
-	
+
 	// Ensure current user is the same as the requested user ID
 	currentUser := middleware.GetUser(r)
 	if currentUser.IsAnonymous() || currentUser.ID != int(userId) {
@@ -226,6 +224,6 @@ func (nh *NoteHandler) HandleListNotesByUserID(w http.ResponseWriter, r *http.Re
 		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "Failed to retrieve notes"})
 		return
 	}
-	
+
 	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"notes": notes}) // 200
 }

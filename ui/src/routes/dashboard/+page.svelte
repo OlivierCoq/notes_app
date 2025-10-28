@@ -1,26 +1,21 @@
 <script lang="ts">
-	// Imports
-	// environment
-	import { PUBLIC_API_URL } from '$env/static/public';
-	// Svelte
-	import { fade, scale } from 'svelte/transition';
-
 	// Note: User data now comes from server load function instead of client store
 
 	// Components
 	import { Modal, DarkMode } from 'flowbite-svelte';
 	import { Editor } from '@tadashi/svelte-editor-quill';
+	import NoteSelector from '$lib/components/NoteSelector.svelte';
+	import NotesList from '$lib/components/NotesList.svelte';
 
 	// Types
 	import type { Note } from '$lib/types/Note';
 
 	// Data and State
-	// props from server load function:
+	//     props from server load function:
 	let { data } = $props();
 
 	// Extract notes and user from the server data
 	/* 
-  
     Using $derived to create reactive variables for notes, user, and error
     based on the data provided by the server load function.
   */
@@ -76,8 +71,6 @@
 		}
 	};
 
-	// Stores
-
 	// Methods
 	const submitNewNote = async () => {
 		// Handle new note submission logic here using server-provided user data
@@ -119,6 +112,11 @@
 		dashboard_state.quill.content.html = '';
 		dashboard_state.quill.content.text = '';
 	};
+
+	const select_note = (note: Note) => {
+		// Handle note selection logic here
+		console.log('Selected note:', note);
+	};
 </script>
 
 <svelte:head>
@@ -139,28 +137,7 @@
 
 	<div class="flex w-full flex-1">
 		<!-- Notes List -->
-		<div class="flex h-[90vh] w-1/5 flex-col overflow-scroll border-r border-slate-600 p-4">
-			<h2 class="mb-4 text-xl font-bold text-slate-200">Your Notes</h2>
-			<!-- If dashboard_state.all_notes.length > 0 -->
-			{#if dashboard_state.all_notes.length > 0}
-				<ul>
-					{#each dashboard_state.all_notes as note}
-						<li
-							in:scale
-							out:fade={{ duration: 400 }}
-							class="mb-2 cursor-pointer rounded-md p-2 hover:bg-slate-600 dark:hover:bg-slate-500"
-						>
-							<h3 class="text-lg font-semibold text-slate-100">{note?.title}</h3>
-							<!-- <p class="text-sm text-slate-300">{note.content.replace(/<[^>]+>/g, '').slice(0, 50)}{note.content.length > 50 ? '...' : ''}</p> -->
-							<!-- HTML markup: -->
-							<p class="text-sm text-slate-300">{@html note?.content}</p>
-						</li>
-					{/each}
-				</ul>
-			{:else}
-				<p class="text-slate-400">Hmm. No notes. Get writing!</p>
-			{/if}
-		</div>
+		<NotesList {notes} {select_note} />
 	</div>
 	<div class="flex w-full flex-row justify-end p-4">
 		<button

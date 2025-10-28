@@ -5,15 +5,16 @@ import (
 	"fmt"
 )
 
-
 type Note struct {
 	ID         int    `json:"id"`
 	Title      string `json:"title"`
 	Content    string `json:"content"`
 	UserID     int    `json:"user_id"`
 	IsFavorite bool   `json:"is_favorite"`
-	CreatedAt  string `json:"created_at"`
-	UpdatedAt  string `json:"updated_at"`
+	FolderID   *int   `json:"folder_id"` // can be null:
+
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 type PostgresNoteStore struct {
@@ -36,7 +37,7 @@ type NoteStore interface {
 
 // CRUD operations:
 
-	// Create note:
+// Create note:
 func (pg *PostgresNoteStore) CreateNote(note *Note) (*Note, error) {
 
 	// transaction:
@@ -47,12 +48,12 @@ func (pg *PostgresNoteStore) CreateNote(note *Note) (*Note, error) {
 	defer tx.Rollback()
 
 	query := `
-		INSERT INTO notes (title, content, user_id, is_favorite, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, NOW(), NOW())
+		INSERT INTO notes (title, content, user_id, is_favorite, folder_id, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
 		RETURNING id, created_at, updated_at
 	`
-	
-	err = tx.QueryRow(query, note.Title, note.Content, note.UserID, note.IsFavorite).Scan(&note.ID, &note.CreatedAt, &note.UpdatedAt)
+
+	err = tx.QueryRow(query, note.Title, note.Content, note.UserID, note.IsFavorite, note.FolderID).Scan(&note.ID, &note.CreatedAt, &note.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +69,7 @@ func (pg *PostgresNoteStore) GetNoteByID(id int) (*Note, error) {
 	// Create a note instance first:
 	note := &Note{}
 	query := `
-		SELECT id, title, content, user_id, is_favorite, created_at, updated_at
+		SELECT id, title, content, user_id, is_favorite, filepath, created_at, updated_at
 		FROM notes	
 		WHERE id = $1
 	`
@@ -78,6 +79,7 @@ func (pg *PostgresNoteStore) GetNoteByID(id int) (*Note, error) {
 		&note.Content,
 		&note.UserID,
 		&note.IsFavorite,
+		&note.FolderID,
 		&note.CreatedAt,
 		&note.UpdatedAt,
 	)
@@ -102,14 +104,15 @@ func (pg *PostgresNoteStore) UpdateNote(note *Note) error {
 		SET title = $1,
 		    content = $2,
 		    is_favorite = $3,
+		    folder_id = $4,
 		    updated_at = NOW()
-		WHERE id = $4
+		WHERE id = $5
 	`
-	_, err = tx.Exec(query, note.Title, note.Content, note.IsFavorite, note.ID)
+	_, err = tx.Exec(query, note.Title, note.Content, note.IsFavorite, note.FolderID, note.ID)
 	if err != nil {
 		return err
 	}
-	
+
 	if err := tx.Commit(); err != nil {
 		return err
 	}
@@ -135,7 +138,6 @@ func (pg *PostgresNoteStore) DeleteNote(id int) error {
 	}
 	return nil
 
-
 }
 
 func (pg *PostgresNoteStore) GetNoteOwner(id int) (int, error) {
@@ -152,12 +154,12 @@ func (pg *PostgresNoteStore) GetNoteOwner(id int) (int, error) {
 		}
 		return 0, err
 	}
-	return userID, nil	
+	return userID, nil
 }
 
 func (pg *PostgresNoteStore) ListNotesByUserID(userID int) ([]*Note, error) {
 	query := `
-		SELECT id, title, content, user_id, is_favorite, created_at, updated_at
+		SELECT id, title, content, user_id, is_favorite, folder_id, created_at, updated_at
 		FROM notes
 		WHERE user_id = $1
 		ORDER BY created_at DESC
@@ -167,7 +169,7 @@ func (pg *PostgresNoteStore) ListNotesByUserID(userID int) ([]*Note, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var notes []*Note
 	for rows.Next() {
 		note := &Note{}
@@ -177,6 +179,7 @@ func (pg *PostgresNoteStore) ListNotesByUserID(userID int) ([]*Note, error) {
 			&note.Content,
 			&note.UserID,
 			&note.IsFavorite,
+			&note.FolderID,
 			&note.CreatedAt,
 			&note.UpdatedAt,
 		)
