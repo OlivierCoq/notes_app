@@ -1,6 +1,5 @@
 <script lang="ts">
-
-  import { DarkMode } from 'flowbite-svelte';
+	import { DarkMode } from 'flowbite-svelte';
 	import { onMount } from 'svelte';
 	import { user as userStore } from '$lib/stores/AppUser';
 	import type { User } from '$lib/types/User';
@@ -38,7 +37,7 @@
 	};
 </script>
 
-<div class="flex w-full flex-row justify-between bg-slate-800 p-3 shadow-md">
+<div id="navbar" class="flex w-full flex-row justify-between bg-slate-800 p-3 shadow-md">
 	<div class="flex w-1/2 flex-row justify-start text-start">
 		<a href="/dashboard">
 			<h1 class="text-xl font-bold text-slate-200">notez</h1>

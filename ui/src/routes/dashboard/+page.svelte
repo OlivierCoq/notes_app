@@ -4,16 +4,16 @@
 	// Components
 	import { Modal, DarkMode } from 'flowbite-svelte';
 	import { Editor } from '@tadashi/svelte-editor-quill';
-	import NoteSelector from '$lib/components/NoteSelector.svelte';
 	import NotesList from '$lib/components/NotesList.svelte';
+	import NoteViewer from '$lib/components/NoteViewer.svelte';
 
 	// Types
 	import type { Note } from '$lib/types/Note';
-  import type { Folder } from '$lib/types/Folder';
+	import type { User } from '$lib/types/User';
 
-  // Stores
-  import { folders_store } from '../../stores/Folders';
-  import { notes_store } from '../../stores/Notes';
+	// Stores
+	import { folders_store } from '../../stores/Folders';
+	import { notes_store } from '../../stores/Notes';
 
 	// Data and State
 	//     props from server load function:
@@ -25,29 +25,18 @@
     based on the data provided by the server load function.
   */
 	let notes = $derived(data.notes || []);
-  let folders = $derived(data.folders || []);
-
-  // Set folders in the store
-  $effect(() => {
-	  folders_store.set(folders);
-    notes_store.set(notes);
-    // console.log
-  });
-
+	let folders = $derived(data.folders || []);
 	let user = $derived(data.user);
 	let error = $derived(data.error);
 
-	// Update dashboard state when notes change
+	// Set folders in the store
 	$effect(() => {
-		// Waits for notes to be available
-		if (notes) {
-			dashboard_state.all_notes = notes;
-		}
+		folders_store.set(folders);
+		notes_store.set(notes);
+		// console.log
 	});
 
 	let dashboard_state = $state({
-		all_notes: [] as Note[],
-    folders: [] as Folder[],
 		new_note: {
 			title: ''
 		},
@@ -61,29 +50,17 @@
 				html: '',
 				text: ''
 			}
-		}
+		},
+		selected_id: null as number | null
 	});
+
+	let selected_note = $derived(
+		() => notes.find((note: Note) => note.id === dashboard_state.selected_id) || null
+	);
 
 	const onTextChange = (markup: any, plaintext: any) => {
 		dashboard_state.quill.content.html = markup;
 		dashboard_state.quill.content.text = plaintext;
-	};
-
-	const loadNotes = async () => {
-		// Fetch notes logic here using server-provided user data
-		if (!user?.id) {
-			console.error('No user ID available');
-			return;
-		}
-
-		const response = await fetch(`/api/notes/all/${user.id}`);
-		if (response.ok) {
-			const data = await response.json();
-			dashboard_state.all_notes = data.notes;
-			// console.log('Loaded notes:', dashboard_state.all_notes);
-		} else {
-			console.error('Error loading notes:', response.statusText);
-		}
 	};
 
 	// Methods
@@ -99,7 +76,7 @@
 			title: dashboard_state.new_note.title,
 			content: dashboard_state.quill.content.html,
 			is_favorite: false,
-      folder_id: null
+			folder_id: null
 		};
 		// console.log('submitting: ', post_obj);
 
@@ -117,7 +94,9 @@
 			const data = await response.json();
 			console.log('Note added successfully:', data);
 			// update notes store:
-      notes_store.update(notes => [...notes, data.note]);
+			notes_store.update((notes) => [...notes, data.note]);
+			// Update local notes array
+			notes = [...notes, data.note];
 		} else {
 			console.error('Error adding note:', response.statusText);
 		}
@@ -127,13 +106,12 @@
 		dashboard_state.new_note.title = '';
 		dashboard_state.quill.content.html = '';
 		dashboard_state.quill.content.text = '';
-    
-
 	};
 
 	const select_note = (note: Note) => {
 		// Handle note selection logic here
 		console.log('Selected note:', note);
+		dashboard_state.selected_id = note.id;
 	};
 </script>
 
@@ -145,7 +123,7 @@
 	/>
 </svelte:head>
 
-<div class="flex min-h-[95vh] w-full flex-col">
+<div id="dashboard" class="flex min-h-[95vh] w-full flex-col">
 	<!-- Error Display -->
 	{#if error}
 		<div class="mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700">
@@ -153,15 +131,24 @@
 		</div>
 	{/if}
 
-	<div class="flex w-full flex-1">
+	<div id="notes-interface" class="flex w-full flex-1 flex-row">
 		<!-- Notes List -->
-    {#if user && notes }
-		  <!-- <NotesList {notes} {folders} {select_note} {user} /> -->
-      <!-- Populate notesList from store: -->
-       <NotesList notes={ $notes_store } folders={ $folders_store } {select_note} {user} />
-    {/if}
+		{#if user && notes}
+			<!-- Populate notesList from store: -->
+			<NotesList notes={$notes_store} folders={$folders_store} {select_note} {user} />
+			{#if selected_note()}
+				<NoteViewer selected_note={selected_note()} />
+			{:else}
+				<div
+					class="note-viewer flex w-full flex-1 flex-col border-l border-slate-700 p-4 text-slate-400"
+				>
+					<p>Select a note to view its content.</p>
+				</div>
+			{/if}
+		{/if}
+		<!-- Main Content Area -->
 	</div>
-	<div class="flex w-full flex-row justify-end p-4">
+	<div id="user-actions-interface" class="flex w-full flex-row justify-end p-4">
 		<button
 			class="cursor-pointer rounded-full bg-sky-400 px-4 py-2 text-white shadow-xl hover:bg-sky-500"
 			onclick={() => (dashboard_state.new_note_modal = true)}
@@ -196,12 +183,6 @@
 					onclick={submitNewNote}>Submit</button
 				>
 			</div>
-			<!-- {#snippet footer()}
-        <button type="submit" value="success">I accept</button>
-        <button type="submit" value="decline" color="alternative">Decline</button>
-      {/snippet} -->
 		</Modal>
 	</div>
 </div>
-
-<!-- Modals -->
