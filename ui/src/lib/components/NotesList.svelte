@@ -120,8 +120,15 @@
 				if (parent) {
 					if (!parent?.subfolders) {
 						parent.subfolders = [];
+					} else {
+						// prevent duplicates
+						const exists = parent.subfolders.find((sf) => sf.id === f.id);
+						if (exists) {
+							continue;
+						} else {
+							parent.subfolders.push(f);
+						}
 					}
-					parent?.subfolders?.push(f);
 				}
 			} else {
 				roots.push(f);

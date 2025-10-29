@@ -36,13 +36,13 @@
 		event.preventDefault();
 		setHover(false);
 		const data_transfer = event.dataTransfer;
-		console.log('Data transfer on drop:', data_transfer);
+		// console.log('Data transfer on drop:', data_transfer);
 		if (!data_transfer) return;
 		const id_str = data_transfer.getData('application/x-note-id');
-		console.log('Data transfer ID string:', id_str);
+		// console.log('Data transfer ID string:', id_str);
 		const note_id = Number(id_str);
 		if (!note_id) return;
-		console.log('Dropped note ID:', note_id, 'on folder ID:', folder.id);
+		// console.log('Dropped note ID:', note_id, 'on folder ID:', folder.id);
 		// Update the note's folder_id via API call
 		try {
 			const response = await fetch(`/api/notes/update/${note_id}`, {
