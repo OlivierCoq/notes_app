@@ -88,7 +88,7 @@
 		const byFolder = new Map<number, Note[]>();
 		for (const n of allNotes) {
 			if (n.folder_id != null) {
-				const arr = byFolder.get(n.folder_id) ?? [];
+				const arr = byFolder.get(n.folder_id) ?? []; // get existing or new array
 				arr.push(n);
 				byFolder.set(n.folder_id, arr);
 			}
@@ -98,7 +98,7 @@
 		const clone = (f: Folder): Folder => ({
 			...f,
 			notes: byFolder.get(f.id) ?? [],
-			subfolders: f.subfolders?.map(clone)
+			subfolders: f.subfolders?.map(clone) ?? []
 		});
 		// Add subfolders to parents
 		attachFoldersToFolderParents(rawFolders);
@@ -120,13 +120,16 @@
 				if (parent) {
 					if (!parent?.subfolders) {
 						parent.subfolders = [];
+						parent.subfolders.push(f);
 					} else {
 						// prevent duplicates
-						const exists = parent.subfolders.find((sf) => sf.id === f.id);
+						const exists = parent['subfolders'].find((sf) => sf.id === f.id);
 						if (exists) {
+							console.warn('Duplicate subfolder found:', f);
 							continue;
+						} else {
+							parent.subfolders.push(f);
 						}
-						parent.subfolders.push(f);
 					}
 				}
 			} else {
@@ -179,7 +182,7 @@
 			<h3 class="mb-2 text-lg font-semibold text-slate-300">Folders</h3>
 			<Accordion flush multiple>
 				{#each notes_list_state.folders as folder}
-					<NoteFolder {folder} {select_note} />
+					<NoteFolder {folder} {select_note} {user} />
 				{/each}
 			</Accordion>
 		</div>

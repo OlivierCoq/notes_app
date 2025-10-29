@@ -2,27 +2,64 @@
 	// types
 	import type { Folder } from '$lib/types/Folder';
 	// Props
-	let { folder, select_note } = $props();
+	let { folder, select_note, user } = $props();
 
 	// Stores:
 	import { notes_store } from '../../stores/Notes';
+	import { folders_store } from '../../stores/Folders';
 
 	// Components
 	import NoteSelector from '$lib/components/NoteSelector.svelte';
 	import NoteFolder from '$lib/components/NoteFolder.svelte';
 
-	console.log('Folder in NoteFolder:', folder);
+	// console.log('Folder in NoteFolder:', folder);
 
 	// imports
 	import { AccordionItem, Accordion } from 'flowbite-svelte';
 	// icons:
-	import { FolderSolid } from 'flowbite-svelte-icons';
+	import { FolderPlusOutline, FolderSolid } from 'flowbite-svelte-icons';
 	//   Svelte
 	import { fade } from 'svelte/transition';
+	import { tick } from 'svelte';
+
+	// State
+	let note_folder_state = $state({
+		adding_subfolder: false,
+		new_subfolder: {
+			user_id: user?.id || null,
+			title: '',
+			is_favorite: false,
+			parent_folder_id: {
+				Int64: folder.id,
+				Valid: true
+			}
+		}
+	});
 
 	// Functions
 	const addSubfolder = async () => {
 		// Implementation for adding a subfolder
+		try {
+			const response = await fetch('/api/folders/add', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(note_folder_state.new_subfolder)
+			});
+			if (!response.ok) {
+				throw new Error(`Error adding subfolder: ${response.statusText}`);
+			}
+			const newFolder = await response.json();
+			// update folders_store:
+
+			console.log('New subfolder added:', newFolder);
+			folders_store.update((folders) => [...folders, newFolder]);
+			await tick();
+			folder.subfolders.push(newFolder?.folder);
+		} catch (error) {
+			console.error('Failed to add subfolder:', error);
+		}
 	};
 
 	//     Drag + Drop:
@@ -93,8 +130,41 @@
 		>
 			<FolderSolid class="h-6 w-6 shrink-0" />
 			<p class="text-slate-200">{folder.title}</p>
+			<div class="flex-1"></div>
 		</div>
 	{/snippet}
+	<div class="flex flex-col">
+		<div class="flex flex-row items-center gap-2">
+			<button
+				class="cursor-pointer p-1 hover:visible hover:bg-slate-600 group-hover:visible"
+				onclick={() => (note_folder_state.adding_subfolder = !note_folder_state.adding_subfolder)}
+				aria-label="Add Subfolder"
+			>
+				<FolderPlusOutline class="h-6 w-6 shrink-0" />
+			</button>
+		</div>
+		{#if note_folder_state.adding_subfolder}
+			<div class="flex flex-row">
+				<input
+					in:fade
+					out:fade={{ duration: 400 }}
+					type="text"
+					placeholder="New Folder"
+					bind:value={note_folder_state.new_subfolder.title}
+					class="mb-2 ms-4 mt-1 w-3/4 rounded border border-slate-600 bg-slate-800 p-2 text-slate-200 focus:border-sky-400 focus:outline-none"
+				/>
+				<button
+					class="mb-2 ms-2 mt-1 h-10 w-10 cursor-pointer rounded bg-sky-400 p-2 text-white hover:bg-sky-500"
+					onclick={() => {
+						addSubfolder();
+						note_folder_state.adding_subfolder = false;
+					}}
+				>
+					+
+				</button>
+			</div>
+		{/if}
+	</div>
 	<div>
 		<ul class="mt-2">
 			{#each folder.notes as note}
@@ -105,7 +175,7 @@
 			<div class="ml-4 mt-4 border-l border-slate-600 pl-4">
 				{#each folder.subfolders as subfolder}
 					<!-- Insane self-referencing loop!!! :)  -->
-					<NoteFolder folder={subfolder} {select_note} />
+					<NoteFolder folder={subfolder} {select_note} {user} />
 				{/each}
 			</div>
 		{/if}
