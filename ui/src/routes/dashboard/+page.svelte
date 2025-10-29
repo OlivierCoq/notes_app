@@ -153,13 +153,7 @@
 		<!-- Notes List -->
 		{#if user && notes}
 			<!-- Populate notesList from store: -->
-			<NotesList
-				notes={$notes_store}
-				folders={$folders_store}
-				{select_note}
-				{user}
-				onPostMove={refreshData}
-			/>
+			<NotesList notes={$notes_store} folders={$folders_store} {select_note} {user} />
 			{#if selected_note()}
 				<NoteViewer selected_note={selected_note()} {deleted_note} />
 			{:else}

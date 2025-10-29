@@ -2,7 +2,10 @@
 	// types
 	import type { Folder } from '$lib/types/Folder';
 	// Props
-	let { folder, select_note, onPostMove } = $props();
+	let { folder, select_note } = $props();
+
+	// Stores:
+	import { notes_store } from '../../stores/Notes';
 
 	// Components
 	import NoteSelector from '$lib/components/NoteSelector.svelte';
@@ -53,9 +56,15 @@
 				throw new Error(`Error updating note: ${response.statusText}`);
 			}
 			console.log('Note moved successfully');
-			if (onPostMove) {
-				await onPostMove();
-			}
+			// Update notes_store to reflect the change
+			notes_store.update((notes) => {
+				return notes.map((note) => {
+					if (note.id === note_id) {
+						return { ...note, folder_id: folder.id };
+					}
+					return note;
+				});
+			});
 		} catch (error) {
 			console.error('Failed to move note:', error);
 		}
@@ -91,7 +100,7 @@
 			<div class="ml-4 mt-4 border-l border-slate-600 pl-4">
 				{#each folder.subfolders as subfolder}
 					<!-- Insane self-referencing loop!!! :)  -->
-					<NoteFolder folder={subfolder} {select_note} {onPostMove} />
+					<NoteFolder folder={subfolder} {select_note} />
 				{/each}
 			</div>
 		{/if}

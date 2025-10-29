@@ -1,11 +1,10 @@
 <script lang="ts">
 	// Props
-	let { notes, select_note, user, folders, onPostMove } = $props<{
+	let { notes, select_note, user, folders } = $props<{
 		notes: Note[];
 		select_note: (note: Note) => void;
 		user: User | null;
 		folders: Folder[] | null;
-		onPostMove: () => Promise<void>;
 	}>();
 
 	// Imports
@@ -174,7 +173,7 @@
 			<h3 class="mb-2 text-lg font-semibold text-slate-300">Folders</h3>
 			<Accordion flush multiple>
 				{#each notes_list_state.folders as folder}
-					<NoteFolder {folder} {select_note} {onPostMove} />
+					<NoteFolder {folder} {select_note} />
 				{/each}
 			</Accordion>
 		</div>
