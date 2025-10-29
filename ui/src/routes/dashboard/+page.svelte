@@ -12,8 +12,9 @@
 	import type { User } from '$lib/types/User';
 
 	// Stores
-	import { folders_store } from '../../stores/Folders';
-	import { notes_store } from '../../stores/Notes';
+	import { folders_store, refreshFolders } from '../../stores/Folders';
+	import { notes_store, refreshNotes } from '../../stores/Notes';
+	import { onMount } from 'svelte';
 
 	// Data and State
 	//     props from server load function:
@@ -34,7 +35,12 @@
 		folders_store.set(folders);
 		notes_store.set(notes);
 		// console.log
+		// refreshData();
 	});
+
+	// onMount(() => {
+	// 	refreshData();
+	// });
 
 	let dashboard_state = $state({
 		new_note: {
@@ -64,6 +70,13 @@
 	};
 
 	// Methods
+	const refreshData = async () => {
+		let user = data.user;
+		if (user && user.id) {
+			await Promise.all([refreshNotes(user?.id), refreshFolders(user?.id)]);
+		}
+	};
+
 	const submitNewNote = async () => {
 		// Handle new note submission logic here using server-provided user data
 		if (!user?.id) {
@@ -97,6 +110,8 @@
 			notes_store.update((notes) => [...notes, data.note]);
 			// Update local notes array
 			notes = [...notes, data.note];
+			// Auto select the newly created note
+			dashboard_state.selected_id = data.note.id;
 		} else {
 			console.error('Error adding note:', response.statusText);
 		}
@@ -138,7 +153,13 @@
 		<!-- Notes List -->
 		{#if user && notes}
 			<!-- Populate notesList from store: -->
-			<NotesList notes={$notes_store} folders={$folders_store} {select_note} {user} />
+			<NotesList
+				notes={$notes_store}
+				folders={$folders_store}
+				{select_note}
+				{user}
+				onPostMove={refreshData}
+			/>
 			{#if selected_note()}
 				<NoteViewer selected_note={selected_note()} {deleted_note} />
 			{:else}

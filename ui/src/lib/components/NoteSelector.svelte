@@ -18,19 +18,28 @@
 			select_note(note);
 		}
 	};
+	// Dragging:
+	const handle_dragstart = (event: DragEvent) => {
+		if (!event.dataTransfer) return;
+		event.dataTransfer?.setData('text/plain', JSON.stringify(note));
+		event.dataTransfer?.setData('application/note-id', note.id.toString());
+		event.dataTransfer.effectAllowed = 'move';
+	};
 </script>
 
 <li
 	in:scale
 	out:fade={{ duration: 400 }}
-	class="note-selector mb-2 cursor-pointer rounded-md p-2 hover:bg-slate-600 dark:hover:bg-slate-500"
+	class="note-selector mb-2 cursor-pointer overflow-hidden rounded-md p-2 hover:bg-slate-600 dark:hover:bg-slate-500"
 >
-	<button onclick={handle_click} class="cursor-pointer">
-		<div class="flex flex-col">
-			<div class="flex max-w-[300px] flex-col p-2 text-start">
+	<button onclick={handle_click} class="cursor-pointer overflow-hidden">
+		<div class="flex flex-col overflow-hidden">
+			<div class="flex max-w-[300px] flex-col overflow-hidden p-2 text-start">
 				<h3 class="text-lg font-semibold text-slate-100">{note?.title}</h3>
 				<!-- HTML markup, preview: -->
-				<div class="prose line-clamp text-sm text-slate-300">{@html note?.content}</div>
+				<div class="prose line-clamp overflow-hidden pe-6 text-sm text-slate-300">
+					{@html note?.content}
+				</div>
 			</div>
 		</div>
 	</button>

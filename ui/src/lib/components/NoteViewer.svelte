@@ -39,6 +39,12 @@
 		}
 	});
 
+	// Auto format onMount
+	import { onMount, tick } from 'svelte';
+	onMount(() => {
+		autoFormat();
+	});
+
 	// Prepopulate quill content when selected_note changes
 	$effect(() => {
 		if (selected_note) {
@@ -85,6 +91,7 @@
 			// Optionally, update the selected_note content
 			selected_note.content = note_viewer_state.quill.content.html;
 			note_viewer_state.editing = false;
+
 			// Update notes store:
 			notes_store.update((notes) => {
 				return notes.map((note) =>
@@ -93,6 +100,8 @@
 						: note
 				);
 			});
+			await tick();
+			autoFormat();
 		} catch (error) {
 			console.error('Error saving note:', error);
 		}
@@ -105,6 +114,20 @@
 			const paragraphs = noteBody.querySelectorAll('p');
 			paragraphs.forEach((p) => p.classList.add('wrap-anywhere'));
 		}
+	};
+
+	const toggleEditing = async () => {
+		autoFormat();
+		note_viewer_state.editing = !note_viewer_state.editing;
+		await tick();
+		autoFormat();
+		// if (note_viewer_state.editing) {
+		//   // Prepopulate quill content when entering edit mode
+		//   note_viewer_state.quill.content.html = selected_note.content;
+		//   const tempDiv = document.createElement('div');
+		//   tempDiv.innerHTML = selected_note.content;
+		//   note_viewer_state.quill.content.text = tempDiv.textContent || tempDiv.innerText || '';
+		// }
 	};
 
 	const deleteNote = async () => {
@@ -153,7 +176,7 @@
 		{/if}
 		<button
 			class="btn btn-lg mr-4 cursor-pointer text-slate-400 hover:text-slate-500"
-			onclick={() => (note_viewer_state.editing = !note_viewer_state.editing)}
+			onclick={toggleEditing}
 		>
 			<EditSolid class="h-8 w-8 shrink-0" />
 		</button>

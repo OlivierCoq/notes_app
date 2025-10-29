@@ -1,10 +1,11 @@
 <script lang="ts">
 	// Props
-	let { notes, select_note, user, folders } = $props<{
+	let { notes, select_note, user, folders, onPostMove } = $props<{
 		notes: Note[];
 		select_note: (note: Note) => void;
 		user: User | null;
 		folders: Folder[] | null;
+		onPostMove: () => Promise<void>;
 	}>();
 
 	// Imports
@@ -12,6 +13,7 @@
 	//   Svelte
 	//   Components
 	import NoteSelector from '$lib/components/NoteSelector.svelte';
+	import NoteFolder from '$lib/components/NoteFolder.svelte';
 	//   Icons
 	import { FolderPlusOutline, FolderSolid } from 'flowbite-svelte-icons';
 
@@ -43,6 +45,16 @@
 	// Lifecycle
 	import { onMount } from 'svelte';
 
+	// Immediately organize notes into folders and single notes
+	$effect(() => {
+		if (folders && notes) {
+			notes_list_state.folders = attachNotesToFolders(folders, notes);
+
+			// Identify single notes (not in any folder)
+			notes_list_state.single_notes = notes.filter((n: Note) => n.folder_id == null);
+		}
+	});
+
 	// Functions
 	const addFolder = async (parent_folder: Folder | null) => {
 		try {
@@ -72,6 +84,52 @@
 			console.error('Error adding folder:', error);
 		}
 	};
+
+	const attachNotesToFolders = (rawFolders: Folder[], allNotes: Note[]): Folder[] => {
+		const byFolder = new Map<number, Note[]>();
+		for (const n of allNotes) {
+			if (n.folder_id != null) {
+				const arr = byFolder.get(n.folder_id) ?? [];
+				arr.push(n);
+				byFolder.set(n.folder_id, arr);
+			}
+		}
+
+		// Recursive
+		const clone = (f: Folder): Folder => ({
+			...f,
+			notes: byFolder.get(f.id) ?? [],
+			subfolders: f.subfolders?.map(clone)
+		});
+		// Add subfolders to parents
+		attachFoldersToFolderParents(rawFolders);
+
+		// Identify folders without parents:
+		const topLevelFolders = rawFolders.filter((f) => f.parent_folder_id?.Int64 == 0);
+		return topLevelFolders.map(clone);
+	};
+	const attachFoldersToFolderParents = (rawFolders: Folder[]): Folder[] => {
+		const byId = new Map<number, Folder>();
+		for (const f of rawFolders) {
+			byId.set(f?.id, f);
+		}
+
+		const roots: Folder[] = [];
+		for (const f of rawFolders) {
+			if (f.parent_folder_id != null) {
+				const parent = byId?.get(f.parent_folder_id?.Int64);
+				if (parent) {
+					if (!parent?.subfolders) {
+						parent.subfolders = [];
+					}
+					parent?.subfolders?.push(f);
+				}
+			} else {
+				roots.push(f);
+			}
+		}
+		return roots;
+	};
 </script>
 
 <div
@@ -95,6 +153,12 @@
 				bind:value={notes_list_state.new_folder.title}
 				placeholder="New Folder Title"
 				class="me-2 flex-1 rounded border border-slate-600 bg-slate-800 p-2 text-slate-200 focus:border-sky-400 focus:outline-none"
+				onkeydown={(e) => {
+					if (e.key === 'Enter') {
+						addFolder(null);
+						notes_list_state.adding_new_folder = false;
+					}
+				}}
 			/>
 			<button
 				onclick={() => addFolder(null)}
@@ -109,40 +173,15 @@
 		<div class="folder mb-4 text-slate-200">
 			<h3 class="mb-2 text-lg font-semibold text-slate-300">Folders</h3>
 			<Accordion flush multiple>
-				{#each folders as folder}
-					<AccordionItem
-						class="align-start mb-2 flex flex-row rounded bg-slate-700 text-slate-200"
-						classes={{ inactive: 'text-slate-200' }}
-					>
-						{#snippet header()}
-							<div class="flex flex-row items-center gap-2">
-								<FolderSolid class="h-6 w-6 shrink-0" />
-								<p class="text-slate-200">{folder.title}</p>
-							</div>
-						{/snippet}
-						<div></div>
-						<!-- <ul class="mt-2">
-              {#each notes.filter(note => note.folder_id === folder.id) as note}
-                <li class="mb-1 p-2 bg-slate-600 rounded hover:bg-slate-500 cursor-pointer" on:click={() => select_note(note)}>
-                  <span class="text-slate-200">{note.title}</span>
-                </li>
-              {/each}
-            </ul> -->
-					</AccordionItem>
+				{#each notes_list_state.folders as folder}
+					<NoteFolder {folder} {select_note} />
 				{/each}
 			</Accordion>
-			<!-- <ul>
-        {#each folders as folder}
-          <li class="mb-1 p-2 bg-slate-700 rounded hover:bg-slate-600 cursor-pointer">
-            <span class="text-slate-200">{folder.title}</span>
-          </li>
-        {/each}
-      </ul> -->
 		</div>
 	{/if}
 	{#if notes?.length > 0}
 		<ul>
-			{#each notes as note}
+			{#each notes_list_state.single_notes as note}
 				<NoteSelector {note} {select_note} />
 			{/each}
 		</ul>
