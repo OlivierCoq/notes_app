@@ -174,7 +174,7 @@
 			<h3 class="mb-2 text-lg font-semibold text-slate-300">Folders</h3>
 			<Accordion flush multiple>
 				{#each notes_list_state.folders as folder}
-					<NoteFolder {folder} {select_note} />
+					<NoteFolder {folder} {select_note} {onPostMove} />
 				{/each}
 			</Accordion>
 		</div>

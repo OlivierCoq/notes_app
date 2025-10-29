@@ -21,6 +21,7 @@ export const PATCH: RequestHandler = async ({ params, cookies, request }) => {
     }
 
     const body = await request.json();
+    console.log('Request body for updating note:', body);
 
     // Here you would typically call your updateNote function
     const response = await fetch(`${PUBLIC_API_URL}/notes/${id}`, {

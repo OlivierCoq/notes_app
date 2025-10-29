@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Types
 	import type { Note } from '$lib/types/Note';
+	import { tick } from 'svelte';
 
 	// Props
 	let { note, select_note } = $props<{
@@ -19,11 +20,15 @@
 		}
 	};
 	// Dragging:
-	const handle_dragstart = (event: DragEvent) => {
+	const handle_dragstart = async (event: DragEvent) => {
 		if (!event.dataTransfer) return;
 		event.dataTransfer?.setData('text/plain', JSON.stringify(note));
 		event.dataTransfer?.setData('application/note-id', note.id.toString());
+		// push into dataTransfer items:
+		event.dataTransfer?.setData('application/x-note-id', note.id.toString());
 		event.dataTransfer.effectAllowed = 'move';
+		// await tick();
+		// console.log(event.dataTransfer);
 	};
 </script>
 
@@ -32,9 +37,14 @@
 	out:fade={{ duration: 400 }}
 	class="note-selector mb-2 cursor-pointer overflow-hidden rounded-md p-2 hover:bg-slate-600 dark:hover:bg-slate-500"
 >
-	<button onclick={handle_click} class="cursor-pointer overflow-hidden">
-		<div class="flex flex-col overflow-hidden">
-			<div class="flex max-w-[300px] flex-col overflow-hidden p-2 text-start">
+	<button
+		onclick={handle_click}
+		draggable="true"
+		ondragstart={handle_dragstart}
+		class="cursor-pointer overflow-hidden"
+	>
+		<div class="flex flex-col overflow-hidden rounded-md">
+			<div class="flex max-w-[300px] flex-col overflow-hidden rounded-md p-2 text-start">
 				<h3 class="text-lg font-semibold text-slate-100">{note?.title}</h3>
 				<!-- HTML markup, preview: -->
 				<div class="prose line-clamp overflow-hidden pe-6 text-sm text-slate-300">

@@ -126,7 +126,7 @@ func (nh *NoteHandler) HandleUpdateNote(w http.ResponseWriter, r *http.Request) 
 		Title      *string `json:"title"`
 		Content    *string `json:"content"`
 		IsFavorite *bool   `json:"is_favorite"`
-		FolderId   *string `json:"folder_id"`
+		FolderId   *int    `json:"folder_id"`
 	}
 
 	err = json.NewDecoder(r.Body).Decode(&updatedNoteRequest)
@@ -145,6 +145,12 @@ func (nh *NoteHandler) HandleUpdateNote(w http.ResponseWriter, r *http.Request) 
 	}
 	if updatedNoteRequest.IsFavorite != nil {
 		existingNote.IsFavorite = *updatedNoteRequest.IsFavorite
+	}
+	// FolderId can be nil to remove from folder
+	if updatedNoteRequest.FolderId != nil {
+		existingNote.FolderID = updatedNoteRequest.FolderId
+	} else {
+		existingNote.FolderID = nil
 	}
 
 	// Save the updated note

@@ -71,10 +71,10 @@
 
 	// Methods
 	const refreshData = async () => {
-		let user = data.user;
-		if (user && user.id) {
-			await Promise.all([refreshNotes(user?.id), refreshFolders(user?.id)]);
-		}
+		// let user = data.user;
+		// if (user && user.id) {
+		// 	await Promise.all([refreshNotes(user?.id), refreshFolders(user?.id)]);
+		// }
 	};
 
 	const submitNewNote = async () => {
