@@ -126,7 +126,7 @@ func (nh *NoteHandler) HandleUpdateNote(w http.ResponseWriter, r *http.Request) 
 		Title      *string `json:"title"`
 		Content    *string `json:"content"`
 		IsFavorite *bool   `json:"is_favorite"`
-		Filepath   *string `json:"filepath"`
+		FolderId   *string `json:"folder_id"`
 	}
 
 	err = json.NewDecoder(r.Body).Decode(&updatedNoteRequest)

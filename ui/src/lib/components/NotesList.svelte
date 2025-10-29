@@ -40,20 +40,23 @@
 		}
 	});
 
-	console.log('Folders in NotesList:', folders);
-
 	// Lifecycle
 	import { onMount } from 'svelte';
 
 	// Functions
-	const addFolder = async () => {
+	const addFolder = async (parent_folder: Folder | null) => {
 		try {
-			const response = await fetch('/api/notes/folders/add', {
+			const response = await fetch('/api/folders/add', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(notes_list_state.new_folder)
+				body: JSON.stringify({
+					user_id: user?.id,
+					title: notes_list_state.new_folder.title,
+					is_favorite: false,
+					parent_folder_id: parent_folder ? parent_folder.id : null
+				})
 			});
 
 			if (!response.ok) {
@@ -94,7 +97,7 @@
 				class="me-2 flex-1 rounded border border-slate-600 bg-slate-800 p-2 text-slate-200 focus:border-sky-400 focus:outline-none"
 			/>
 			<button
-				onclick={addFolder}
+				onclick={() => addFolder(null)}
 				class="flex h-8 w-8 cursor-pointer items-center justify-center rounded bg-sky-500 p-2 text-white hover:bg-sky-600"
 				disabled={notes_list_state.new_folder.title.trim() === ''}
 			>

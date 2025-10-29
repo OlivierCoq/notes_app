@@ -69,9 +69,9 @@ func (pg *PostgresNoteStore) GetNoteByID(id int) (*Note, error) {
 	// Create a note instance first:
 	note := &Note{}
 	query := `
-		SELECT id, title, content, user_id, is_favorite, filepath, created_at, updated_at
+		SELECT id, title, content, user_id, is_favorite, folder_id, created_at, updated_at
 		FROM notes	
-		WHERE id = $1
+		WHERE id = $1 
 	`
 	err := pg.db.QueryRow(query, id).Scan(
 		&note.ID,
