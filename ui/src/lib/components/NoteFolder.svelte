@@ -11,7 +11,7 @@
 	import NoteSelector from '$lib/components/NoteSelector.svelte';
 	import NoteFolder from '$lib/components/NoteFolder.svelte';
 
-	// console.log('Folder in NoteFolder:', folder);
+	console.log('Folder in NoteFolder:', folder);
 
 	// imports
 	import { AccordionItem, Accordion } from 'flowbite-svelte';
@@ -20,7 +20,12 @@
 	//   Svelte
 	import { fade } from 'svelte/transition';
 
-	// Drag + Drop:
+	// Functions
+	const addSubfolder = async () => {
+		// Implementation for adding a subfolder
+	};
+
+	//     Drag + Drop:
 	let isOver = false;
 	const allowDrop = (event: DragEvent) => {
 		event.preventDefault();

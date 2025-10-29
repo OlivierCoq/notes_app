@@ -125,9 +125,8 @@
 						const exists = parent.subfolders.find((sf) => sf.id === f.id);
 						if (exists) {
 							continue;
-						} else {
-							parent.subfolders.push(f);
 						}
+						parent.subfolders.push(f);
 					}
 				}
 			} else {
