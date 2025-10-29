@@ -26,7 +26,7 @@
 >
 	<button onclick={handle_click}>
 		<div class="flex flex-col">
-			<div class="flex flex-col">
+			<div class="flex flex-col align-start text-start">
 				<h3 class="text-lg font-semibold text-slate-100">{note?.title}</h3>
 				<!-- HTML markup: -->
 				<p class="text-sm text-slate-300">{@html note?.content}</p>

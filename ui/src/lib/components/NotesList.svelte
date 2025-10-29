@@ -1,43 +1,145 @@
 <script lang="ts">
 	// Props
-	let { notes, select_note } = $props();
+	let { notes, select_note, user, folders } = $props();
 
 	// Imports
+  import { AccordionItem, Accordion } from "flowbite-svelte";
 	//   Svelte
 	//   Components
 	import NoteSelector from '$lib/components/NoteSelector.svelte';
+  //   Icons
+  import { FolderPlusOutline, FolderSolid } from 'flowbite-svelte-icons'
 
 	// Types
 	import type { Note } from '$lib/types/Note';
-	interface Folder {
-		id: number;
-		name: string;
-		notes: Note[];
-		subfolders?: Folder[];
-	}
+  import type { Folder } from '$lib/types/Folder';
+
+  // Stores
+  import { folders_store } from '../../stores/Folders';
+  import { notes_store } from '../../stores/Notes';
+
+  // console.log('Foldsers store in NotesList:', $folders_store);
 
 	// State
 	let notes_list_state = $state({
 		folders: [] as Folder[],
 		selected_folder: null as Folder | null,
-		single_notes: [] as Note[]
+		single_notes: [] as Note[],
+    adding_new_folder: false,
+    new_folder: {
+      user_id: user?.id || null,
+      title: '',
+      is_favorite: false,
+      parent_folder_id: null
+    }
 	});
+
+  console.log('Folders in NotesList:', folders);
 
 	// Lifecycle
 	import { onMount } from 'svelte';
 
 	// Functions
+  const addFolder = async () => {
+    try {
+      const response = await fetch('/api/notes/folders/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(notes_list_state.new_folder)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add folder');
+      }
+
+      const newFolder = await response.json();
+      console.log('Added folder:', newFolder);
+      notes_list_state.folders = [...notes_list_state.folders, newFolder];
+      // add folder to Folders Store:
+      folders_store.update(folders => [...folders, newFolder?.folder]);
+    } catch (error) {
+      console.error('Error adding folder:', error);
+    }
+  };
 </script>
 
 <div class="notes-list flex h-[90vh] w-1/5 flex-col overflow-scroll border-r border-slate-600 p-4">
-	<h2 class="mb-4 text-xl font-bold text-slate-200">Your Notes</h2>
-	{#if notes.length > 0}
+	<div class="w-full flex flex-row justify-between items-center mb-4">
+    <h2 class="text-xl font-bold text-slate-200">Your Notes</h2>
+    <button class="p-2 bg-slate-700 rounded hover:bg-slate-600 cursor-pointer" onclick={() => (notes_list_state.adding_new_folder = !notes_list_state.adding_new_folder)}>
+      <FolderPlusOutline class="shrink-0 h-6 w-6 text-slate-200" />
+    </button>
+  </div>
+  {#if notes_list_state.adding_new_folder}
+    <div class="w-full flex flex-row mb-4 items-center">
+    <input
+      name="title"
+      type="text"
+      bind:value={notes_list_state.new_folder.title}
+      placeholder="New Folder Title"
+      class="flex-1 p-2 rounded bg-slate-800 text-slate-200 border border-slate-600 focus:outline-none focus:border-sky-400 me-2"
+    />
+    <button
+      onclick={addFolder}
+      class="p-2 bg-sky-500 text-white rounded hover:bg-sky-600 h-8 w-8 flex items-center justify-center cursor-pointer"
+      disabled={notes_list_state.new_folder.title.trim() === ''}
+    >
+      +
+    </button>
+  </div>
+  {/if}
+  {#if folders && folders?.length > 0}
+    <div class="mb-4 folder text-slate-200">
+      <h3 class="text-lg font-semibold text-slate-300 mb-2">Folders</h3>
+      <Accordion flush multiple>
+        {#each folders as folder}
+          <AccordionItem 
+          class="bg-slate-700 text-slate-200 rounded mb-2 align-start flex flex-row"
+          classes={{ inactive: 'text-slate-200'}}
+          >
+           {#snippet header()}
+           <div class="flex flex-row items-center gap-2">
+            <FolderSolid class="shrink-0 h-6 w-6" /> 
+             <p class="text-slate-200">{folder.title}</p>
+           </div>
+           {/snippet}
+           <div></div>
+            <!-- <ul class="mt-2">
+              {#each notes.filter(note => note.folder_id === folder.id) as note}
+                <li class="mb-1 p-2 bg-slate-600 rounded hover:bg-slate-500 cursor-pointer" on:click={() => select_note(note)}>
+                  <span class="text-slate-200">{note.title}</span>
+                </li>
+              {/each}
+            </ul> -->
+          </AccordionItem>
+        {/each}
+      </Accordion>
+      <!-- <ul>
+        {#each folders as folder}
+          <li class="mb-1 p-2 bg-slate-700 rounded hover:bg-slate-600 cursor-pointer">
+            <span class="text-slate-200">{folder.title}</span>
+          </li>
+        {/each}
+      </ul> -->
+    </div>
+  {/if}
+	{#if notes?.length > 0}
 		<ul>
 			{#each notes as note}
 				<NoteSelector {note} {select_note} />
 			{/each}
 		</ul>
-	{:else}
+	{:else} 
 		<p class="text-slate-400">Hmm. No notes. Get writing!</p>
 	{/if}
 </div>
+
+<style>
+
+  /* target svg child of .folder: */
+  .folder :global(svg) {
+    color: #94a3b8; /* Tailwind's text-slate-400 color */
+  }
+</style>

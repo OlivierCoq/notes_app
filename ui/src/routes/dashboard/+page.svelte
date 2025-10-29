@@ -9,6 +9,11 @@
 
 	// Types
 	import type { Note } from '$lib/types/Note';
+  import type { Folder } from '$lib/types/Folder';
+
+  // Stores
+  import { folders_store } from '../../stores/Folders';
+  import { notes_store } from '../../stores/Notes';
 
 	// Data and State
 	//     props from server load function:
@@ -20,6 +25,15 @@
     based on the data provided by the server load function.
   */
 	let notes = $derived(data.notes || []);
+  let folders = $derived(data.folders || []);
+
+  // Set folders in the store
+  $effect(() => {
+	  folders_store.set(folders);
+    notes_store.set(notes);
+    // console.log
+  });
+
 	let user = $derived(data.user);
 	let error = $derived(data.error);
 
@@ -33,6 +47,7 @@
 
 	let dashboard_state = $state({
 		all_notes: [] as Note[],
+    folders: [] as Folder[],
 		new_note: {
 			title: ''
 		},
@@ -83,7 +98,8 @@
 			user_id: user.id,
 			title: dashboard_state.new_note.title,
 			content: dashboard_state.quill.content.html,
-			is_favorite: false
+			is_favorite: false,
+      folder_id: null
 		};
 		// console.log('submitting: ', post_obj);
 
@@ -99,9 +115,9 @@
 
 		if (response.ok) {
 			const data = await response.json();
-			// console.log('Note added successfully:', data);
-			// Optionally, refresh the notes list or provide user feedback here
-			await loadNotes();
+			console.log('Note added successfully:', data);
+			// update notes store:
+      notes_store.update(notes => [...notes, data.note]);
 		} else {
 			console.error('Error adding note:', response.statusText);
 		}
@@ -111,6 +127,8 @@
 		dashboard_state.new_note.title = '';
 		dashboard_state.quill.content.html = '';
 		dashboard_state.quill.content.text = '';
+    
+
 	};
 
 	const select_note = (note: Note) => {
@@ -137,7 +155,11 @@
 
 	<div class="flex w-full flex-1">
 		<!-- Notes List -->
-		<NotesList {notes} {select_note} />
+    {#if user && notes }
+		  <!-- <NotesList {notes} {folders} {select_note} {user} /> -->
+      <!-- Populate notesList from store: -->
+       <NotesList notes={ $notes_store } folders={ $folders_store } {select_note} {user} />
+    {/if}
 	</div>
 	<div class="flex w-full flex-row justify-end p-4">
 		<button
