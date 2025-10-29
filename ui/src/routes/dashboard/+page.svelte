@@ -109,9 +109,12 @@
 	};
 
 	const select_note = (note: Note) => {
-		// Handle note selection logic here
-		console.log('Selected note:', note);
 		dashboard_state.selected_id = note.id;
+	};
+
+	const deleted_note = () => {
+		// console.log('Note deleted callback received');
+		dashboard_state.selected_id = null;
 	};
 </script>
 
@@ -137,7 +140,7 @@
 			<!-- Populate notesList from store: -->
 			<NotesList notes={$notes_store} folders={$folders_store} {select_note} {user} />
 			{#if selected_note()}
-				<NoteViewer selected_note={selected_note()} />
+				<NoteViewer selected_note={selected_note()} {deleted_note} />
 			{:else}
 				<div
 					class="note-viewer flex w-full flex-1 flex-col border-l border-slate-700 p-4 text-slate-400"
@@ -146,7 +149,6 @@
 				</div>
 			{/if}
 		{/if}
-		<!-- Main Content Area -->
 	</div>
 	<div id="user-actions-interface" class="flex w-full flex-row justify-end p-4">
 		<button
