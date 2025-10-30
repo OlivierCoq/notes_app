@@ -36,8 +36,11 @@
 	},
 	"dependencies": {
 		"@tadashi/svelte-editor-quill": "4",
+		"cloudinary": "^2.8.0",
 		"dotenv": "^17.2.3",
 		"i": "^0.3.7",
-		"jwt-decode": "^4.0.0"
+		"jwt-decode": "^4.0.0",
+		"stream": "^0.0.3",
+		"svelte-file-dropzone": "^2.0.9"
 	}
 }
