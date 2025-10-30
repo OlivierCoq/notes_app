@@ -142,12 +142,12 @@
 
 <div
 	id="notes-list"
-	class="notes-list flex h-[90vh] w-1/5 flex-col overflow-scroll border-r border-slate-600 p-4"
+	class="notes-list flex h-[90vh] w-1/5 flex-col overflow-scroll border-r border-slate-600 px-4 pb-4 pt-6"
 >
-	<div class="mb-4 flex w-full flex-row items-center justify-between">
-		<h2 class="text-xl font-bold text-slate-200">Your Notes</h2>
+	<div class="mb-4 mt-6 flex w-full flex-row items-center justify-between pt-6">
+		<h2 class="mt-5 text-xl font-bold text-slate-200">Your Notes</h2>
 		<button
-			class="cursor-pointer rounded bg-slate-700 p-2 hover:bg-slate-600"
+			class="mt-4 cursor-pointer rounded bg-slate-700 p-2 hover:bg-slate-600"
 			onclick={() => (notes_list_state.adding_new_folder = !notes_list_state.adding_new_folder)}
 		>
 			<FolderPlusOutline class="h-6 w-6 shrink-0 text-slate-200" />
@@ -194,7 +194,7 @@
 			{/each}
 		</ul>
 	{:else}
-		<p class="text-slate-400">Hmm. No notes. Get writing!</p>
+		<p class="text-slate-400">Hmm. No notes? Get writing! 📝</p>
 	{/if}
 </div>
 

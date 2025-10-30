@@ -160,11 +160,11 @@
 	id={`note-view-${selected_note.id}`}
 	in:fade
 	out:fade={{ duration: 400 }}
-	class="note-viewer flex w-4/5 flex-col border-l border-slate-700 p-4"
+	class="note-viewer mt-6 flex w-4/5 flex-col border-l border-slate-700 px-4 pb-4 pt-6"
 >
 	<div
 		id={`note-actions-${selected_note.id}`}
-		class="mx-auto my-2 flex w-[98%] flex-row items-end justify-end p-2"
+		class="mx-auto mb-2 mt-6 flex w-[98%] flex-row items-end justify-end p-2 pt-4"
 	>
 		{#if note_viewer_state.editing}
 			<button
