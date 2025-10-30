@@ -17,7 +17,7 @@
 	// imports
 	import { AccordionItem, Accordion } from 'flowbite-svelte';
 	// icons:
-	import { FolderPlusOutline, FolderSolid } from 'flowbite-svelte-icons';
+	import { FolderPlusOutline, FolderSolid, DotsVerticalOutline } from 'flowbite-svelte-icons';
 	//   Svelte
 	import { fade } from 'svelte/transition';
 	import { tick } from 'svelte';
@@ -111,6 +111,50 @@
 			console.error('Failed to move note:', error);
 		}
 	};
+	/// Dragging Folders
+	const handle_dragstart = (event: DragEvent) => {
+		if (!event.dataTransfer) return;
+		event.dataTransfer?.setData('application/x-folder-id', folder.id.toString());
+		event.dataTransfer.effectAllowed = 'move';
+		event.dataTransfer?.setData('text/plain', JSON.stringify(folder));
+		// console.log('Dragging folder:', folder);
+	};
+	// Receiving folders
+	const handle_folder_drop = async (event: DragEvent) => {
+		event.preventDefault();
+		setHover(false);
+		const data_transfer = event.dataTransfer;
+		if (!data_transfer) return;
+		const id_str = data_transfer.getData('application/x-folder-id');
+		const folder_id = Number(id_str);
+		if (!folder_id) return;
+		// console.log('Dropped folder ID:', folder_id, 'on folder ID:', folder.id);
+		// Update the folder's parent_folder_id via API call
+		try {
+			const response = await fetch(`/api/folders/update/${folder_id}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ parent_folder_id: folder.id })
+			});
+			if (!response.ok) {
+				throw new Error(`Error updating folder: ${response.statusText}`);
+			}
+			console.log('Folder moved successfully');
+			// Update folders_store to reflect the change
+			folders_store.update((folders) => {
+				return folders.map((f) => {
+					if (f.id === folder_id) {
+						return { ...f, parent_folder_id: folder.id };
+					}
+					return f;
+				});
+			});
+		} catch (error) {
+			console.error('Failed to move folder:', error);
+		}
+	};
 </script>
 
 <AccordionItem
@@ -127,6 +171,9 @@
 			ondrop={handleDrop}
 			role="group"
 			aria-label={`Folder ${folder.title}`}
+			draggable="true"
+			ondragstart={handle_dragstart}
+			class:bg-slate-600={isOver}
 		>
 			<FolderSolid class="h-6 w-6 shrink-0" />
 			<p class="text-slate-200">{folder.title}</p>

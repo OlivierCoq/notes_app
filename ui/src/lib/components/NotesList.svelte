@@ -125,7 +125,7 @@
 						// prevent duplicates
 						const exists = parent['subfolders'].find((sf) => sf.id === f.id);
 						if (exists) {
-							console.warn('Duplicate subfolder found:', f);
+							// console.warn('Duplicate subfolder found:', f);
 							continue;
 						} else {
 							parent.subfolders.push(f);

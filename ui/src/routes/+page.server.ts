@@ -34,7 +34,7 @@ export const actions = {
       secure: true
     });
 
-    // Redirect to the home page or intended page after login
+
     const redirectTo = url.searchParams.get('redirectTo') || '/dashboard';
     throw redirect(303, redirectTo);
   }
