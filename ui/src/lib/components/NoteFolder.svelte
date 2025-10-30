@@ -11,13 +11,14 @@
 	// Components
 	import NoteSelector from '$lib/components/NoteSelector.svelte';
 	import NoteFolder from '$lib/components/NoteFolder.svelte';
+	import { Modal } from 'flowbite-svelte';
 
 	// console.log('Folder in NoteFolder:', folder);
 
 	// imports
 	import { AccordionItem, Accordion } from 'flowbite-svelte';
 	// icons:
-	import { FolderPlusOutline, FolderSolid, DotsVerticalOutline } from 'flowbite-svelte-icons';
+	import { FolderPlusOutline, FolderSolid, TrashBinSolid } from 'flowbite-svelte-icons';
 	//   Svelte
 	import { fade } from 'svelte/transition';
 	import { tick } from 'svelte';
@@ -25,6 +26,7 @@
 	// State
 	let note_folder_state = $state({
 		adding_subfolder: false,
+		deleting: false,
 		new_subfolder: {
 			user_id: user?.id || null,
 			title: '',
@@ -61,9 +63,25 @@
 			console.error('Failed to add subfolder:', error);
 		}
 	};
-
+	const deleteFolder = async () => {
+		// Implementation for deleting the folder
+		try {
+			const response = await fetch(`/api/folders/delete/${folder.id}`, {
+				method: 'DELETE'
+			});
+			if (!response.ok) {
+				throw new Error(`Error deleting folder: ${response.statusText}`);
+			}
+			console.log('Folder deleted:', folder);
+			// update folders_store:
+			await tick();
+			folders_store.update((folders) => folders.filter((f) => f.id !== folder.id));
+		} catch (error) {
+			console.error('Failed to delete folder:', error);
+		}
+	};
 	//     Drag + Drop:
-	let isOver = false;
+	let isOver = $state(false);
 	const allowDrop = (event: DragEvent) => {
 		event.preventDefault();
 		console.log('Drag over folder:', folder.title);
@@ -183,12 +201,47 @@
 	<div class="flex flex-col">
 		<div class="flex flex-row items-center gap-2">
 			<button
-				class="cursor-pointer p-1 hover:visible hover:bg-slate-600 group-hover:visible"
+				class="cursor-pointer rounded-md p-1 hover:visible hover:bg-slate-600 group-hover:visible"
 				onclick={() => (note_folder_state.adding_subfolder = !note_folder_state.adding_subfolder)}
 				aria-label="Add Subfolder"
 			>
 				<FolderPlusOutline class="h-6 w-6 shrink-0" />
 			</button>
+			<!-- delete -->
+			<button
+				class="cursor-pointer rounded-md p-1 text-red-400 hover:visible hover:bg-slate-600 hover:text-red-500 group-hover:visible"
+				onclick={() => (note_folder_state.deleting = !note_folder_state.deleting)}
+				aria-label="Delete Folder"
+			>
+				<TrashBinSolid class="h-4 w-4 shrink-0 text-red-400 hover:text-red-500" />
+			</button>
+			<Modal
+				title={`Delete: ${folder.title}`}
+				class="dark"
+				bind:open={note_folder_state.deleting}
+				onaction={({ action }) => alert(`Handle "${action}"`)}
+			>
+				<div>
+					<p>Are you sure you want to delete this folder?</p>
+					<div class="mt-4 flex flex-row justify-end">
+						<button
+							class="btn btn-secondary mr-4 cursor-pointer"
+							onclick={() => (note_folder_state.deleting = false)}
+						>
+							Cancel
+						</button>
+						<button
+							class="btn btn-danger cursor-pointer text-red-500"
+							onclick={() => {
+								deleteFolder();
+								note_folder_state.deleting = false;
+							}}
+						>
+							Delete
+						</button>
+					</div>
+				</div>
+			</Modal>
 		</div>
 		{#if note_folder_state.adding_subfolder}
 			<div class="flex flex-row">

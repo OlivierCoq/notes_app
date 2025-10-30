@@ -87,7 +87,7 @@
 			}
 
 			const data = await response.json();
-			console.log('Note updated successfully:', data);
+			console.log('Note updated successfully!');
 			// Optionally, update the selected_note content
 			selected_note.content = note_viewer_state.quill.content.html;
 			note_viewer_state.editing = false;
