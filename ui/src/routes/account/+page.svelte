@@ -2,6 +2,8 @@
 	// Stores
 
 	// Imports
+	import USStates from '$lib/assets/data/USStates.json';
+	import WorldCountries from '$lib/assets/data/WorldCountries.json';
 
 	//   Svelte
 	import Dropzone from 'svelte-file-dropzone';
@@ -223,16 +225,33 @@
 									/>
 								</label>
 							</div>
-							<div class="w-1/3 ps-4">
-								<label class="block">
-									<span class="text-slate-200">State</span>
-									<input
-										type="text"
-										bind:value={user_account_state.user.address_state}
-										class="mt-1 block w-full rounded border border-slate-600 bg-slate-800 p-2 text-slate-200 focus:border-sky-400 focus:outline-none"
-									/>
-								</label>
-							</div>
+							{#if user_account_state.user.address_country === 'US'}
+								<div class="w-1/3 px-2">
+									<label class="block">
+										<span class="text-slate-200">State</span>
+										<select
+											bind:value={user_account_state.user.address_state}
+											class="mt-1 block w-full rounded border border-slate-600 bg-slate-800 p-2 text-slate-200 focus:border-sky-400 focus:outline-none"
+										>
+											<option value="state.abbreviation" disabled>Select State</option>
+											{#each USStates.data as state}
+												<option value={state.abbreviation}>{state.name}</option>
+											{/each}
+										</select>
+									</label>
+								</div>
+							{:else}
+								<div class="w-1/3 px-2">
+									<label class="block">
+										<span class="text-slate-200">State/Province</span>
+										<input
+											type="text"
+											bind:value={user_account_state.user.address_state}
+											class="mt-1 block w-full rounded border border-slate-600 bg-slate-800 p-2 text-slate-200 focus:border-sky-400 focus:outline-none"
+										/>
+									</label>
+								</div>
+							{/if}
 							<div class="w-1/3 ps-4">
 								<label class="block">
 									<span class="text-slate-200">ZIP</span>
@@ -242,6 +261,22 @@
 										class="mt-1 block w-full rounded border border-slate-600 bg-slate-800 p-2 text-slate-200 focus:border-sky-400 focus:outline-none"
 									/>
 								</label>
+							</div>
+						</div>
+						<div class="flex w-full flex-row">
+							<div class="w-3/5">
+								<label class="block">
+									<span class="text-slate-200">Country</span>
+								</label>
+								<select
+									bind:value={user_account_state.user.address_country}
+									class="mt-1 block w-full rounded border border-slate-600 bg-slate-800 p-2 text-slate-200 focus:border-sky-400 focus:outline-none"
+								>
+									<option value="" disabled>Select Country</option>
+									{#each WorldCountries.data as country}
+										<option value={country.code}>{country.name}</option>
+									{/each}
+								</select>
 							</div>
 						</div>
 
