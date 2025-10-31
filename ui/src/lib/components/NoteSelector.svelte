@@ -35,7 +35,7 @@
 <li
 	in:scale
 	out:fade={{ duration: 400 }}
-	class="note-selector mb-2 cursor-pointer overflow-hidden rounded-md p-2 hover:bg-slate-600 dark:hover:bg-slate-500"
+	class="note-selector mb-2 max-h-[140px] cursor-pointer overflow-hidden rounded-md p-2 hover:bg-slate-600 dark:hover:bg-slate-500"
 >
 	<button
 		onclick={handle_click}
