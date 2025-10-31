@@ -218,7 +218,7 @@
 	{#if note_viewer_state.editing}
 		<div
 			class="h-full w-full overflow-hidden rounded-sm bg-slate-100"
-			in:fade
+			in:fade={{ duration: 400 }}
 			out:fade={{ duration: 400 }}
 		>
 			<Editor class="h-96" options={note_viewer_state.quill.options} {onTextChange}
@@ -226,7 +226,11 @@
 			>
 		</div>
 	{:else}
-		<div class="flex-column flex w-full flex-col">
+		<div
+			in:fade={{ duration: 400 }}
+			out:fade={{ duration: 400 }}
+			class="flex-column flex w-full flex-col"
+		>
 			<div class="flex w-full flex-row items-start">
 				{#if note_viewer_state.editing_title}
 					<input

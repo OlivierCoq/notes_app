@@ -97,9 +97,10 @@ type UserStore interface {
 	GetUserByUsername(username string) (*User, error)
 	UpdateUser(*User) (*User, error)
 	GetUserToken(scope, tokenPlaintext string) (*User, error)
+	UpdateUserPassword(userID int, newPassword string) error
 }
 
-// CRU operations:
+// CRUUD operations:
 
 // Create user:
 func (s *PostgresUserStore) CreateUser(user *User) (*User, error) {
@@ -366,4 +367,33 @@ func (s *PostgresUserStore) GetUserToken(scope, plaintextPassword string) (*User
 	}
 
 	return user, nil
+}
+
+// Update user password:
+func (s *PostgresUserStore) UpdateUserPassword(userID int, newPassword string) error {
+	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), 12)
+	if err != nil {
+		return err
+	}
+
+	query := `
+		UPDATE users
+		SET password_hash = $1, updated_at = NOW()
+		WHERE id = $2
+	`
+	result, err := s.db.Exec(query, newPasswordHash, userID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }

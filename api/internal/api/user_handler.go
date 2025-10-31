@@ -254,3 +254,40 @@ func (h *UserHandler) HandleGetSelf(w http.ResponseWriter, r *http.Request) {
 
 	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"user": user}) // 200
 }
+
+// Update user password:
+func (h *UserHandler) HandleUpdateUserPassword(w http.ResponseWriter, r *http.Request) {
+	// Implementation for updating a user's password
+	userId, err := utils.ReadIDParam(r, "id")
+	if err != nil {
+		h.logger.Printf("Invalid user ID parameter: %v", err)
+		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "Invalid user ID parameter"}) // 400
+		return
+	}
+
+	var req struct {
+		NewPassword string `json:"new_password"`
+	}
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		h.logger.Printf("Invalid request payload: %v", err)
+		utils.WriteJSON(w, http.StatusBadRequest, utils.Envelope{"error": "Invalid request payload"})
+		return
+	}
+
+	// Ensure current user is the one being updated
+	currentUser := middleware.GetUser(r)
+	if currentUser.IsAnonymous() || currentUser.ID != int(userId) {
+		h.logger.Printf("Unauthorized password update attempt for user ID %d by user ID %d", userId, currentUser.ID)
+		utils.WriteJSON(w, http.StatusUnauthorized, utils.Envelope{"error": "Unauthorized"}) // 401
+		return
+	}
+	err = h.userStore.UpdateUserPassword(int(userId), req.NewPassword)
+	if err != nil {
+		h.logger.Printf("Error updating user password: %v", err)
+		utils.WriteJSON(w, http.StatusInternalServerError, utils.Envelope{"error": "Failed to update user password"})
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, utils.Envelope{"message": "Password updated successfully"}) // 200
+}
