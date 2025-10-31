@@ -246,7 +246,6 @@
 							}
 						}}
 						class="rounded-sm border-b border-slate-500 bg-transparent text-xl font-bold text-slate-200 focus:outline-none"
-						autofocus
 					/>
 				{:else}
 					<h2 class="text-2xl font-bold text-slate-100">

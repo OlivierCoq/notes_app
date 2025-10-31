@@ -4,7 +4,6 @@ import { PUBLIC_API_URL } from '$env/static/public'
 
 export const actions = {
 
-  // Nothing is coming in request formData:
 
   default: async ({ request, fetch, cookies, url }) => {
     const form = await request.formData();
@@ -12,7 +11,7 @@ export const actions = {
     const password = String(form.get('password') ?? '')
 
 
-    console.log('Logging in with', { username, password });
+    // console.log('Logging in with', { username, password });
 
 
     const res = await fetch(`${PUBLIC_API_URL}/tokens/authentication`, {
@@ -23,7 +22,24 @@ export const actions = {
       body: JSON.stringify({ username, password })
     });
     if (!res.ok) {
-      return fail(400, { error: 'Invalid credentials' });
+      // locals error interface
+      let errorMessage = 'Incorrect username or password. bummer.';
+      try {
+        const errorData = await res.json();
+        console.error('Login failed:', errorData);
+        // errorMessage += errorData.message || errorData.error || 'Login failed';
+      } catch (e) {
+        console.error('Failed to parse error response:', e);
+        if (res.status === 401) {
+          errorMessage = 'Invalid username or password';
+        } else if (res.status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+      }
+      return fail(res.status, {
+        error: errorMessage,
+        username: username
+      });
     }
     const { auth_token } = await res.json();
     console.log('Received auth token:', auth_token)

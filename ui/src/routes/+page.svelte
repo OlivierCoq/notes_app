@@ -1,6 +1,22 @@
 <script lang="ts">
 	// imports
 	import { PUBLIC_API_URL } from '$env/static/public';
+	import { page } from '$app/stores';
+	import { enhance } from '$app/forms';
+
+	// Svelte
+	import { Alert } from 'flowbite-svelte';
+	import { fade } from 'svelte/transition';
+
+	// form data from server
+	let { form } = $props<{ form?: any }>();
+
+	// error handlign and stuff
+	$effect(() => {
+		if (form?.username) {
+			login_state.user_creds.username = form.username;
+		}
+	});
 
 	// State
 	const login_state = $state({
@@ -13,7 +29,9 @@
 		},
 		logged_in: false,
 		signup_mode: false,
-		posting: false
+		posting: false,
+		success: '',
+		error: ''
 	});
 
 	// Functions
@@ -29,11 +47,15 @@
 			});
 			if (response.ok) {
 				login_state.logged_in = true;
+				// Success message:
+				login_state.success = 'Signup successful! Redirecting to dashboard...';
 				window.location.href = '/dashboard';
 			} else {
+				login_state.error = 'Signup failed. Please try again.';
 				console.error('Signup failed:', response.statusText);
 			}
 		} catch (error) {
+			login_state.error = `Signup failed: ${error} `;
 			console.error('Error during signup:', error);
 		} finally {
 			login_state.posting = false;
@@ -76,6 +98,21 @@
 				>
 					Sign Up
 				</button>
+				<!-- Success/Error Messages -->
+				{#if login_state.success}
+					<div in:fade out:fade={{ duration: 400 }}>
+						<Alert color="green" class="mt-2">
+							<span>{login_state.success}</span>
+						</Alert>
+					</div>
+				{/if}
+				{#if login_state.error}
+					<div in:fade out:fade={{ duration: 400 }}>
+						<Alert color="red" class="mt-2">
+							<span>{login_state.error}</span>
+						</Alert>
+					</div>
+				{/if}
 			</div>
 			<div class="flex w-full flex-col text-center">
 				<p class="mt-4 text-slate-600 dark:text-slate-300">
@@ -89,7 +126,7 @@
 				</p>
 			</div>
 		{:else}
-			<form method="POST" class="flex flex-col">
+			<form method="POST" use:enhance class="flex flex-col">
 				<input
 					name="username"
 					bind:value={login_state.user_creds.username}
@@ -110,6 +147,29 @@
 				>
 					Login
 				</button>
+				<!-- Server-side Error Messages from form action -->
+				{#if form?.error}
+					<div in:fade out:fade={{ duration: 400 }}>
+						<Alert color="red" class="mt-2">
+							<span>{form.error}</span>
+						</Alert>
+					</div>
+				{/if}
+				<!-- Client-side Success/Error Messages -->
+				{#if login_state.success}
+					<div in:fade out:fade={{ duration: 400 }}>
+						<Alert color="green" class="mt-2">
+							<span>{login_state.success}</span>
+						</Alert>
+					</div>
+				{/if}
+				{#if login_state.error}
+					<div in:fade out:fade={{ duration: 400 }}>
+						<Alert color="red" class="mt-2">
+							<span>{login_state.error}</span>
+						</Alert>
+					</div>
+				{/if}
 			</form>
 			<div class="flex w-full flex-col text-center">
 				<p class="mt-4 text-slate-600 dark:text-slate-300">

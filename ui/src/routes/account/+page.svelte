@@ -7,12 +7,14 @@
 
 	//   Svelte
 	import Dropzone from 'svelte-file-dropzone';
+	import { Alert } from 'flowbite-svelte';
+	import { fade } from 'svelte/transition';
 	//  Components
 	import { Editor } from '@tadashi/svelte-editor-quill';
 
 	// Types
 	import type { User } from '$lib/types/User';
-	import { tick } from 'svelte';
+	import { onMount, tick } from 'svelte';
 
 	// State
 	let { data } = $props();
@@ -36,11 +38,36 @@
 			address_zip: data?.user?.zip || '',
 			address_country: data?.user?.country || ''
 		},
+		password_update: {
+			current_password: '',
+			new_password: '',
+			confirm_password: '',
+			error: '',
+			success: ''
+		},
 		pfp_file: null as File | null,
-		saved: false
+		saved: false,
+		quill: {
+			options: {
+				placeholder: '',
+				plainclipboard: true
+			},
+			content: {
+				html: '',
+				text: ''
+			}
+		}
 	});
 
 	// Lifecycle
+	onMount(() => {
+		// Prepopulate quill content
+		user_account_state.quill.content.html = user_account_state.user.bio;
+		user_account_state.quill.content.text = user_account_state.user.bio;
+		user_account_state.quill.options.placeholder = user_account_state.user.bio
+			? ''
+			: 'Tell us about yourself...';
+	});
 
 	// Functions
 	const handlePfpDrop = async (event: CustomEvent) => {
@@ -110,6 +137,45 @@
 			user_account_state.posting = false;
 		}
 	};
+	const onTextChange = (markup: any, plaintext: any) => {
+		user_account_state.user.bio = markup;
+		user_account_state.quill.content.html = markup;
+		user_account_state.quill.content.text = plaintext;
+	};
+	const handlePasswordUpdate = async () => {
+		// Implement password update logic here
+		user_account_state.posting = true;
+		user_account_state.password_update.error = '';
+		try {
+			const response = await fetch(`/api/users/password/${data?.user?.id}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					id: data?.user?.id,
+					new_password: user_account_state.password_update.new_password
+				})
+			});
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.message || 'Failed to update password');
+				user_account_state.password_update.error = errorData.message || 'Failed to update password';
+			}
+			const result = await response.json();
+			console.log('Password updated successfully:', result);
+			user_account_state.password_update.success = 'Password updated successfully!';
+			// Clear password fields
+			user_account_state.password_update.current_password = '';
+			user_account_state.password_update.new_password = '';
+			user_account_state.password_update.confirm_password = '';
+		} catch (error: any) {
+			console.error('Error updating password:', error);
+			user_account_state.password_update.error = error.message;
+		} finally {
+			user_account_state.posting = false;
+		}
+	};
 </script>
 
 <svelte:head>
@@ -134,9 +200,10 @@
 			<h1 class="my-6 text-center text-3xl font-bold text-slate-200">Account Settings</h1>
 			<div class="mt-6 flex w-full flex-row">
 				<!-- Profile pic -->
-				<div class="flex w-full flex-col items-end p-6 pt-6 md:w-1/2">
+				<div class="flex w-full flex-col p-6 pe-6 pt-6 md:w-1/2">
 					<div
-						class="mx-6 flex h-[250px] w-[250px] flex-col items-center justify-center rounded-full bg-white"
+						id="profile-picture"
+						class="mx-6 mb-4 flex h-[250px] w-[250px] flex-col items-center justify-center rounded-full bg-white"
 						style="background-image: url({user_account_state.user.pfp_url ||
 							'/default_pfp.png'}); background-size: cover; background-position: center;"
 					>
@@ -146,6 +213,17 @@
 						>
 							<p class="text-center text-sm text-white">Click or Drag & Drop to Change</p>
 						</Dropzone>
+					</div>
+					<!-- Edit bio -->
+					<div
+						class="me-6 mt-6 w-full overflow-hidden overflow-scroll rounded-md bg-slate-200 px-6"
+					>
+						<label class="block">
+							<span class="text-slate-200">Bio</span>
+							<Editor class="h-96" options={user_account_state.quill.options} {onTextChange}
+								>{@html user_account_state.quill.content.html}</Editor
+							>
+						</label>
 					</div>
 				</div>
 				<!-- Account info -->
@@ -265,10 +343,11 @@
 						</div>
 						<div class="flex w-full flex-row">
 							<div class="w-3/5">
-								<label class="block">
+								<label class="block" for="country-select">
 									<span class="text-slate-200">Country</span>
 								</label>
 								<select
+									id="country-select"
 									bind:value={user_account_state.user.address_country}
 									class="mt-1 block w-full rounded border border-slate-600 bg-slate-800 p-2 text-slate-200 focus:border-sky-400 focus:outline-none"
 								>
@@ -277,6 +356,56 @@
 										<option value={country.code}>{country.name}</option>
 									{/each}
 								</select>
+							</div>
+						</div>
+						<h3 class="text-md mt-6 font-semibold text-slate-200">Change password</h3>
+						<div class="flex w-full flex-col">
+							<div class="w-1/2">
+								<label class="block">
+									<span class="text-slate-200">New Password</span>
+									<input
+										type="password"
+										bind:value={user_account_state.password_update.new_password}
+										class="mt-1 block w-full rounded border border-slate-600 bg-slate-800 p-2 text-slate-200 focus:border-sky-400 focus:outline-none"
+									/>
+								</label>
+							</div>
+							<div class="w-1/2">
+								<label class="block">
+									<span class="text-slate-200">Confirm New Password</span>
+									<input
+										type="password"
+										bind:value={user_account_state.password_update.confirm_password}
+										class="mt-1 block w-full rounded border border-slate-600 bg-slate-800 p-2 text-slate-200 focus:border-sky-400 focus:outline-none"
+									/>
+								</label>
+							</div>
+							<div class="w-1/2">
+								<button
+									onclick={handlePasswordUpdate}
+									class="btn btn-sm mt-2 cursor-pointer rounded-md bg-sky-500 px-4 py-2 text-white hover:bg-sky-600"
+									disabled={user_account_state.posting ||
+										user_account_state.password_update.new_password === '' ||
+										user_account_state.password_update.new_password !==
+											user_account_state.password_update.confirm_password}
+								>
+									Update Password
+								</button>
+								<!-- Alert: -->
+								{#if user_account_state.password_update.error}
+									<div in:fade out:fade={{ duration: 400 }}>
+										<Alert color="red" class="mt-2">
+											<span>{user_account_state.password_update.error}</span>
+										</Alert>
+									</div>
+								{/if}
+								{#if user_account_state.password_update.success}
+									<div in:fade out:fade={{ duration: 400 }}>
+										<Alert color="green" class="mt-2">
+											<span>{user_account_state.password_update.success}</span>
+										</Alert>
+									</div>
+								{/if}
 							</div>
 						</div>
 

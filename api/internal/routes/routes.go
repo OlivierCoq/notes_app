@@ -37,7 +37,7 @@ func SetupRoutes(app *app.Application) *chi.Mux {
 		r.Get("/users/{id}", app.Middleware.RequireUser(app.UserHandler.HandleGetUserByID))
 		r.Patch("/users/{id}", app.Middleware.RequireUser(app.UserHandler.HandleUpdateUser))
 		r.Get("/users/me", app.Middleware.RequireUser(app.UserHandler.HandleGetSelf))
-		r.Patch("/users/me/password", app.Middleware.RequireUser(app.UserHandler.HandleUpdateUserPassword))
+		r.Patch("/users/password/{id}", app.Middleware.RequireUser(app.UserHandler.HandleUpdateUserPassword))
 		// r.Delete("/users/{id}", app.Middleware.RequireUser(app.UserHandler.HandleDeleteUser))
 	})
 
