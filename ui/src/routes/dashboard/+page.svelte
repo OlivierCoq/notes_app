@@ -158,9 +158,9 @@
 				<NoteViewer selected_note={selected_note()} {deleted_note} />
 			{:else}
 				<div
-					class="note-viewer flex w-full flex-1 flex-col border-l border-slate-700 p-4 text-slate-400"
+					class="note-viewer flex w-full flex-1 flex-col items-center justify-center border-l border-slate-700 p-4 text-slate-400"
 				>
-					<p>Select a note to view its content. 🗒️</p>
+					<p>Select a note to view its content! 🗒️</p>
 				</div>
 			{/if}
 		{/if}
