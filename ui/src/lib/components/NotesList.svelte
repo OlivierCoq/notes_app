@@ -142,7 +142,7 @@
 
 <div
 	id="notes-list"
-	class="notes-list flex h-[90vh] w-1/5 flex-col overflow-scroll border-r border-slate-600 px-4 pb-4 pt-6"
+	class="notes-list flex h-[90vh] w-1/5 flex-col overflow-y-scroll border-r border-slate-600 px-4 pb-4 pt-6"
 >
 	<div class="mb-4 mt-6 flex w-full flex-row items-center justify-between pt-6">
 		<h2 class="mt-5 text-xl font-bold text-slate-200">Your Notes</h2>
@@ -198,9 +198,50 @@
 	{/if}
 </div>
 
-<style>
-	/* target svg child of .folder: */
-	.folder :global(svg) {
-		color: #94a3b8; /* Tailwind's text-slate-400 color */
+<style lang="scss">
+	// Import your mixins if needed
+	// @import '$lib/styles/_mixins.scss';
+
+	// SCSS Variables
+	$text-slate-400: #94a3b8;
+	$text-slate-300: #cbd5e0;
+	$bg-slate-700: #334155;
+	$bg-slate-600: #475569;
+
+	// Main container styles
+	.notes-list {
+		// Nested SCSS - target svg children of .folder
+		.folder {
+			:global(svg) {
+				color: $text-slate-400;
+				transition: color 0.2s ease;
+			}
+
+			&:hover :global(svg) {
+				color: $text-slate-300;
+			}
+
+			// You could add more nested styles here
+			h3 {
+				position: relative;
+
+				&::before {
+					content: "📁";
+					margin-right: 0.5rem;
+				}
+			}
+		}
+
+		// Style for the "no notes" message
+		p {
+			&.text-slate-400 {
+				text-align: center;
+				font-style: italic;
+				padding: 2rem;
+				background: rgba(255, 255, 255, 0.05);
+				border-radius: 0.5rem;
+				margin: 1rem 0;
+			}
+		}
 	}
 </style>

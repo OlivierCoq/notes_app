@@ -1,0 +1,204 @@
+// SCSS Utilities and Mixins
+
+// Color palette (matching your Tailwind theme)
+$colors: (
+  primary: (
+    50: #fff5f2,
+    100: #fff1ee,
+    200: #ffe4de,
+    300: #ffd5cc,
+    400: #ffbcad,
+    500: #fe795d,
+    600: #ef562f,
+    700: #eb4f27,
+    800: #cc4522,
+    900: #a5371b
+  ),
+  secondary: (
+    50: #f0f9ff,
+    100: #e0f2fe,
+    200: #bae6fd,
+    300: #7dd3fc,
+    400: #38bdf8,
+    500: #0ea5e9,
+    600: #0284c7,
+    700: #0369a1,
+    800: #075985,
+    900: #0c4a6e
+  ),
+  gray: (
+    50: #f8fafc,
+    100: #f1f5f9,
+    200: #e2e8f0,
+    300: #cbd5e0,
+    400: #a0aec0,
+    500: #718096,
+    600: #4a5568,
+    700: #2d3748,
+    800: #1a202c,
+    900: #171923
+  )
+);
+
+// Function to get color from the map
+@function color($palette, $shade: 500) {
+  @return map-get(map-get($colors, $palette), $shade);
+}
+
+// Spacing scale
+$spacing: (
+  0: 0,
+  1: 0.25rem,
+  2: 0.5rem,
+  3: 0.75rem,
+  4: 1rem,
+  5: 1.25rem,
+  6: 1.5rem,
+  8: 2rem,
+  10: 2.5rem,
+  12: 3rem,
+  16: 4rem,
+  20: 5rem
+);
+
+@function space($size) {
+  @return map-get($spacing, $size);
+}
+
+// Mixins for common patterns
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: space(2) space(4);
+  border-radius: 0.375rem;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@mixin button-variant($bg-color, $text-color: white, $hover-bg: null) {
+  @include button-base;
+  background-color: $bg-color;
+  color: $text-color;
+
+  @if $hover-bg {
+    &:hover:not(:disabled) {
+      background-color: $hover-bg;
+    }
+  } @else {
+    &:hover:not(:disabled) {
+      background-color: darken($bg-color, 8%);
+    }
+  }
+}
+
+@mixin card {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: space(6);
+
+  :global(.dark) & {
+    background: color(gray, 800);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Responsive breakpoints
+$breakpoints: (
+  sm: 640px,
+  md: 768px,
+  lg: 1024px,
+  xl: 1280px,
+  2xl: 1536px
+);
+
+@mixin responsive($breakpoint) {
+  @media (min-width: map-get($breakpoints, $breakpoint)) {
+    @content;
+  }
+}
+
+// Animation mixins
+@mixin fade-in($duration: 0.3s) {
+  animation: fadeIn $duration ease-in-out;
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+@mixin slide-in-from-right($duration: 0.3s) {
+  animation: slideInFromRight $duration ease-out;
+
+  @keyframes slideInFromRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+}
+
+// Form input styling
+@mixin input-base {
+  width: 100%;
+  padding: space(2) space(3);
+  border: 1px solid color(gray, 300);
+  border-radius: 0.375rem;
+  background: white;
+  color: color(gray, 900);
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: color(primary, 500);
+    box-shadow: 0 0 0 3px rgba(254, 121, 93, 0.1);
+  }
+
+  :global(.dark) & {
+    background: color(gray, 800);
+    border-color: color(gray, 600);
+    color: color(gray, 100);
+
+    &:focus {
+      border-color: color(primary, 400);
+      box-shadow: 0 0 0 3px rgba(254, 121, 93, 0.2);
+    }
+  }
+
+  &::placeholder {
+    color: color(gray, 500);
+  }
+}

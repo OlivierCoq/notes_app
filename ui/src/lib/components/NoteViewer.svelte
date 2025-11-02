@@ -267,8 +267,13 @@
 	{/if}
 </div>
 
-<style>
-	.prose {
+<style lang="scss">
+	.note-body {
 		max-width: 150ch !important;
+    
+    p .wrap-anywhere {
+      margin-bottom: 0 !important;
+    }
 	}
+
 </style>

@@ -85,14 +85,11 @@
 		}
 		await tick();
 		console.log('PFP file set to:', user_account_state.pfp_file);
-	};
-	const handleUpdate = async () => {
-		if (user_account_state.pfp_file) {
-			// send to '/api/users/pfp/upload' endpoint
-			const formData = new FormData();
-			formData.append('pfp', user_account_state.pfp_file);
+    if(user_account_state.pfp_file) {
+    const formData = new FormData();
+			formData.append('pfp', user_account_state?.pfp_file);
 			try {
-				const response = await fetch('/api/users/pfp/upload', {
+				const response = await fetch(`/api/users/pfp/upload`, {
 					method: 'POST',
 					body: formData
 				});
@@ -105,10 +102,36 @@
 				user_account_state.user.pfp_url = result.pfp_url;
 				await tick();
 				// Now update the rest of the account info
-				await updateAccount();
+				// await updateAccount();
 			} catch (error) {
 				console.error('Error uploading profile picture:', error);
 			}
+    } 
+	};
+	const handleUpdate = async () => {
+		if (user_account_state.pfp_file) {
+      console.log('Cool story, broo')
+			// send to '/api/users/pfp/upload' endpoint
+			// const formData = new FormData();
+			// formData.append('pfp', user_account_state.pfp_file);
+			// try {
+			// 	const response = await fetch(`/api/users/pfp/upload`, {
+			// 		method: 'POST',
+			// 		body: formData
+			// 	});
+			// 	if (!response.ok) {
+			// 		throw new Error('Failed to upload profile picture');
+			// 	}
+			// 	const result = await response.json();
+			// 	console.log('Profile picture uploaded successfully:', result);
+			// 	// Update user state with new pfp_url
+			// 	user_account_state.user.pfp_url = result.pfp_url;
+			// 	await tick();
+			// 	// Now update the rest of the account info
+			// 	await updateAccount();
+			// } catch (error) {
+			// 	console.error('Error uploading profile picture:', error);
+			// }
 		} else {
 			// No new profile picture, just update account info
 			await updateAccount();
@@ -229,8 +252,8 @@
 				<!-- Account info -->
 				<div class="w-full md:w-1/2">
 					<h3 class="mt-6 text-lg font-semibold text-slate-200">Personal info</h3>
-					<div class="mt-4 flex w-5/6 flex-col space-y-4">
-						<label class="block">
+					<div class="mt-4 flex w-5/6 flex-col space-y-4 pb-5">
+						<label class="block"> 
 							<span class="text-slate-200">Username</span>
 							<input
 								type="text"
@@ -411,7 +434,7 @@
 
 						<button
 							onclick={handleUpdate}
-							class="mt-4 cursor-pointer rounded bg-sky-500 px-4 py-2 text-white hover:bg-sky-600"
+							class="mt-4 mb-5 cursor-pointer rounded bg-sky-500 px-4 py-2 text-white hover:bg-sky-600"
 							disabled={user_account_state.posting}
 						>
 							{user_account_state.posting ? 'Saving...' : 'Save Changes'}
