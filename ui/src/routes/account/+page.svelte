@@ -7,7 +7,7 @@
 
 	//   Svelte
 	import Dropzone from 'svelte-file-dropzone';
-	import { Alert } from 'flowbite-svelte';
+	import { Alert, Spinner } from 'flowbite-svelte';
 	import { fade } from 'svelte/transition';
 	//  Components
 	import { Editor } from '@tadashi/svelte-editor-quill';
@@ -56,7 +56,9 @@
 				html: '',
 				text: ''
 			}
-		}
+		},
+		success_message: '',
+		error_message: ''
 	});
 
 	// Lifecycle
@@ -71,6 +73,7 @@
 
 	// Functions
 	const handlePfpDrop = async (event: CustomEvent) => {
+		user_account_state.posting = true;
 		let files = {
 			accepted: [],
 			rejected: []
@@ -85,8 +88,8 @@
 		}
 		await tick();
 		console.log('PFP file set to:', user_account_state.pfp_file);
-    if(user_account_state.pfp_file) {
-    const formData = new FormData();
+		if (user_account_state.pfp_file) {
+			const formData = new FormData();
 			formData.append('pfp', user_account_state?.pfp_file);
 			try {
 				const response = await fetch(`/api/users/pfp/upload`, {
@@ -98,45 +101,18 @@
 				}
 				const result = await response.json();
 				console.log('Profile picture uploaded successfully:', result);
+				user_account_state.success_message = 'Profile picture updated successfully!';
 				// Update user state with new pfp_url
-				user_account_state.user.pfp_url = result.pfp_url;
+				user_account_state.user.pfp_url = result.url;
 				await tick();
 				// Now update the rest of the account info
-				// await updateAccount();
+				await updateAccount();
 			} catch (error) {
 				console.error('Error uploading profile picture:', error);
 			}
-    } 
-	};
-	const handleUpdate = async () => {
-		if (user_account_state.pfp_file) {
-      console.log('Cool story, broo')
-			// send to '/api/users/pfp/upload' endpoint
-			// const formData = new FormData();
-			// formData.append('pfp', user_account_state.pfp_file);
-			// try {
-			// 	const response = await fetch(`/api/users/pfp/upload`, {
-			// 		method: 'POST',
-			// 		body: formData
-			// 	});
-			// 	if (!response.ok) {
-			// 		throw new Error('Failed to upload profile picture');
-			// 	}
-			// 	const result = await response.json();
-			// 	console.log('Profile picture uploaded successfully:', result);
-			// 	// Update user state with new pfp_url
-			// 	user_account_state.user.pfp_url = result.pfp_url;
-			// 	await tick();
-			// 	// Now update the rest of the account info
-			// 	await updateAccount();
-			// } catch (error) {
-			// 	console.error('Error uploading profile picture:', error);
-			// }
-		} else {
-			// No new profile picture, just update account info
-			await updateAccount();
 		}
 	};
+
 	const updateAccount = async () => {
 		user_account_state.posting = true;
 		try {
@@ -228,13 +204,17 @@
 						id="profile-picture"
 						class="mx-6 mb-4 flex h-[250px] w-[250px] flex-col items-center justify-center rounded-full bg-white"
 						style="background-image: url({user_account_state.user.pfp_url ||
-							'/default_pfp.png'}); background-size: cover; background-position: center;"
+							'https://res.cloudinary.com/dxsjva9e0/image/upload/v1761835316/user_avatar_ry4fdr.png'}); background-size: cover; background-position: center;"
 					>
 						<Dropzone
 							on:drop={handlePfpDrop}
 							class="flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-black/40 hover:bg-black/30"
 						>
-							<p class="text-center text-sm text-white">Click or Drag & Drop to Change</p>
+							{#if user_account_state.posting}
+								<Spinner color="blue" size="8" />
+							{:else}
+								<p class="text-center text-sm text-white">Click or Drag & Drop to Change</p>
+							{/if}
 						</Dropzone>
 					</div>
 					<!-- Edit bio -->
@@ -253,7 +233,7 @@
 				<div class="w-full md:w-1/2">
 					<h3 class="mt-6 text-lg font-semibold text-slate-200">Personal info</h3>
 					<div class="mt-4 flex w-5/6 flex-col space-y-4 pb-5">
-						<label class="block"> 
+						<label class="block">
 							<span class="text-slate-200">Username</span>
 							<input
 								type="text"
@@ -433,8 +413,8 @@
 						</div>
 
 						<button
-							onclick={handleUpdate}
-							class="mt-4 mb-5 cursor-pointer rounded bg-sky-500 px-4 py-2 text-white hover:bg-sky-600"
+							onclick={updateAccount}
+							class="mb-5 mt-4 cursor-pointer rounded bg-sky-500 px-4 py-2 text-white hover:bg-sky-600"
 							disabled={user_account_state.posting}
 						>
 							{user_account_state.posting ? 'Saving...' : 'Save Changes'}

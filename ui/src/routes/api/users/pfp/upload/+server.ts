@@ -38,14 +38,55 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     const timestamp = Math.floor(Date.now() / 1000);
     const eager = `w_400,h_400,c_pad`;
     const publicId = file.name.replace(/\.[^/.]+$/, ""); // Remove file extension
-    
-    // Create params to sign (order matters for Cloudinary)
-    const paramsToSign = `eager=${eager}&public_id=${publicId}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`;
-    
-    // Create SHA-1 signature
-    const signature = await createSHA1Hash(paramsToSign);
 
-    return json({ message: 'File received, upload logic not implemented yet.' }, { status: 200 });
+    // Create params to sign (alphabetical order is required for Cloudinary)
+    const params = {
+      eager: eager,
+      public_id: publicId,
+      timestamp: timestamp.toString()
+    };
+
+    // Sort parameters alphabetically and create string to sign
+    const sortedParams = Object.keys(params)
+      .sort()
+      .map(key => `${key}=${params[key as keyof typeof params]}`)
+      .join('&');
+
+    const stringToSign = `${sortedParams}${CLOUDINARY_API_SECRET}`;
+    console.log('String to sign:', stringToSign);
+
+    // Create SHA-1 signature
+    const signature = await createSHA1Hash(stringToSign);
+
+    // Create FormData for file upload
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+    uploadFormData.append('api_key', CLOUDINARY_API_KEY);
+    uploadFormData.append('timestamp', timestamp.toString());
+    uploadFormData.append('signature', signature);
+    uploadFormData.append('eager', eager);
+    uploadFormData.append('public_id', publicId);
+
+    const response = await fetch(uploadUrl, {
+      method: 'POST',
+      body: uploadFormData
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Cloudinary upload failed:', errorText);
+      return json({ error: `Cloudinary upload failed: ${errorText}` }, { status: response.status });
+    }
+
+    const responseData = await response.json();
+    console.log('Cloudinary upload response:', responseData);
+
+    // Return the secure URL from Cloudinary response
+    return json({
+      message: 'File uploaded successfully',
+      url: responseData.secure_url,
+      public_id: responseData.public_id
+    }, { status: 200 });
   } catch (error) {
     console.error('Error uploading profile picture:', error);
     return json({ error: 'Failed to upload profile picture' }, { status: 500 });
